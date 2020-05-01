@@ -3,7 +3,7 @@
     <div id="app">
       <a-layout>
         <a-layout-header class="header logo">
-          BCVReader —— 提取B站专栏图片
+          readBCV —— 提取B站专栏图片
         </a-layout-header>        
         <a-layout class="layout">
           <ReadBCV />
@@ -16,7 +16,6 @@
 <script>
 import ReadBCV from "./components/Read.vue";
 import zh_CN from "ant-design-vue/lib/locale-provider/zh_CN";
-
 export default {
   name: "App",
   components: {

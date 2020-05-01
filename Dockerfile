@@ -43,5 +43,9 @@ RUN set -xe\
  && find -type d ! -name "db" -a ! -name "." | xargs rm -vr || true\
  && chmod +x /docker-entrypoint.sh
 
+ENV APP_LISTEN='127.0.0.1'\
+    APP_PORT='8765'\
+    APP_PATH='/api/v1/readcv'
+
 VOLUME [ "/var/log" ]
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
