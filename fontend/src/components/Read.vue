@@ -151,7 +151,6 @@ export default {
     },
     websocketclose(e) {
       //关闭
-      console.log(e)
       if (e.code !== 1000 && e.code !== 1006) handleError("获取失败", e.reason || "未知错误", 30);
       this.loading = false;
     }
