@@ -3,7 +3,7 @@ import sys
 from bs4 import BeautifulSoup
 import asyncio
 from threading import Thread
-from queue import Queue, Empty
+from queue import Queue, Empty, Full
 from config import envconfig
 from requests import session
 
@@ -37,10 +37,13 @@ def readCV(webtext):
     ulist = tuple(filter(lambda x:bool(x), map(lambda x:x.attrs.get('data-src'), bs.find('div','article-holder').find_all('img'))))
     return ['@'.join(u.split('@')[:-1]) if '@' in u else u for u in ulist]
 
+def getCVid(url):
+    return int(url.split('/')[-1][2:])
+
 class GetCVAsync():
     def __init__(self, fatherlog):
         self._log = fatherlog.getChild('GetCVAsync')
-        self._econf = envconfig()
+        self._econf = envconfig
         self._getloop = asyncio.new_event_loop()
         self._getthread = Thread(
             target=start_loop,
@@ -53,7 +56,7 @@ class GetCVAsync():
         self._maxQueue = self._econf.get('maxQueue', 2048)
         self._getqueue = Queue(self._maxQueue)
         self._getcoro = asyncio.run_coroutine_threadsafe(
-            self.GetQueue(self._econf.get('GetInterval', 1)),
+            self.GetQueue(self._econf.get('GetInterval', 10)),
             self._getloop
         )
         self._session = session()
@@ -62,29 +65,35 @@ class GetCVAsync():
         headers.pop('Host')
         headers.pop('Upgrade')
         headers.pop('Connection')
+        headers.pop('Origin')
         for k in list(headers.keys()):
             if 'websocket' in k.lower():
                 headers.pop(k)
 
-    async def GetQueue(self, interval = 1):
+    async def GetQueue(self, interval = 10):
         while self._GoRUN:
             try:
                 (url, reqheader, callback, loop) = self._getqueue.get()
-                await asyncio.sleep(5)
                 self.filter_headers(reqheader)
                 self._log.debug('reqheader = %s' % str(reqheader))
                 res = self._session.get(url, headers = reqheader)
                 if res.status_code == 200:
-                    asyncio.run_coroutine_threadsafe(callback(True, readCV(res.text), loop),loop)
+                    cvid = getCVid(url)
+                    asyncio.run_coroutine_threadsafe(callback(True, cvid, readCV(res.text), loop),loop)
                 else:
-                    asyncio.run_coroutine_threadsafe(callback(False, res, loop),loop)
+                    asyncio.run_coroutine_threadsafe(callback(False, None, res, loop),loop)
             except Empty:
                 pass
             except Exception:
-                asyncio.run_coroutine_threadsafe(callback(False, None, loop),loop)
+                asyncio.run_coroutine_threadsafe(callback(False, None, None, loop),loop)
             finally:
                 await asyncio.sleep(interval)
 
     def Get(self, url, reqheader, callback, loop):
-        self._getqueue.put((url, reqheader, callback, loop))
+        try:
+            self._getqueue.put((url, reqheader, callback, loop))
+        except Full:
+            return False, 'Full'
+        except:
+            return False, 'Unknown'
         return True, 'Async'

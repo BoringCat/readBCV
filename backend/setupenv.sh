@@ -6,26 +6,31 @@ SOURCE=$(command -v source)
 
 cd `dirname $0`
 
-BACKEND='beautifulsoup4 mongoengine'
-API='websockets'
-LIBS='requests'
+source ./envsetting.sh
 
 create(){
-    if [ ! -d .venv ]; then python3 -m virtualenv -p $(command -v python3) .venv; fi
+    if [ ! -d "$AIM" ]; then python3 -m virtualenv -p $(command -v python3) --no-download $AIM; fi
 }
 
 update(){
-    source .venv/bin/activate
-    pip install -U pylint $BACKEND $API $LIBS
+    source $AIM/bin/activate
+    pip install -U pip wheel setuptools pylint $BACKEND $API $LIBS
+    venvlib=$(realpath .venv/lib/python3.*)
+    for py in libs/*.py
+    do
+    ln -rvsf $py ${venvlib}/
+    done
     deactivate
 }
 
-rm(){
-    rm -r .venv
+del(){
+    rm -r $AIM
 }
 
 COMMAND=$1
+AIM=$2
 [ -z $COMMAND ] && COMMAND='create'
+[ -z $AIM ] && AIM='.venv'
 
 case $COMMAND in
     'create')
@@ -36,7 +41,7 @@ case $COMMAND in
         update
     ;;
     'recreate')
-        rm
+        del
         create
         update
     ;;

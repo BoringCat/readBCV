@@ -2,36 +2,68 @@
   <div>
     <a-form
       :form="form"
-      :label-col="{ span: 5 }"
-      :wrapper-col="{ span: 16 }"
+      :label-col="{ xs: {span:22, offset:1}, sm: {span: 5, offset:0} }"
+      :wrapper-col="{ xs: {span:22, offset:1}, sm: { span: 16, offset:0 }}"
       @submit="handleSubmit"
       class="form"
     >
+      <a-form-item :wrapper-col="{ xs: {span: 22, offset: 1}, sm: { span: 16, offset: 4 }}" class="warn">
+          <p>提示信息： 由于B站限制，无法直接实现右键菜单 <strong>“使用......下载选定链接”</strong></p>
+          <p><s>你的下载器可以不带Referrer就当我没说</s></p>
+          <p>为防止B站返回421，后端处理速度限制为10秒/个</p>
+          <p>服务器缓存数据时间为7天</p>
+      </a-form-item>
       <a-form-item label="B站专栏地址">
         <a-input v-decorator="decorators['URL']" />
       </a-form-item>
-      <a-form-item :wrapper-col="{ span: 8, offset: 8 }">
+      <a-form-item :wrapper-col="{ xs: {offset: 16, span: 8}, sm: { span: 6, offset: 16 }}" style="text-align: center;">
+        <Checkbox :checked="loadimg" @change="OnLoadImgChange">加载图片</Checkbox>
+      </a-form-item>
+      <a-form-item :wrapper-col="{ xs: {span: 22, offset: 1}, sm: { span: 8, offset: 8 }}">
         <a-button type="primary" block html-type="submit">分析</a-button>
       </a-form-item>
     </a-form>
     <hr />
-    <a-layout class="result">
+    <Row v-if="imglist.length" class="result">
+      <Col :xs="{span:22, offset:1}" :sm="{span:20, offset:2}" :md="{span: 16, offset: 4}" 
+        :lg="{span: 14, offset: 5}" :xl="{span:12, offset: 6}" :xxl="{span: 8, offset: 8}">
       <Spin :spinning="loading" :delay="500" tip="后端限流，等待后端返回中......">
-      <h1>结果</h1>
-      <a-collapse v-model="activeKey"></a-collapse>
+        <h2>结果</h2>
+        <a-collapse v-if="loadimg" v-model="activeKey">
+          <a-collapse-panel v-for="img in imglist" :key="img" :header="getName(img)"><div style="text-align: center;">
+            <a :href="'https:'+img" target="_blank"><img :src="'https:'+img" /></a>
+          </div></a-collapse-panel>
+        </a-collapse>
+        <div v-else v-for="img in imglist" :key="img">
+          <hr />
+          <a :href="'https:'+img" target="_blank">{{ getName(img) }}</a>
+        </div>
+        <div>
+          <h3>批量链接：</h3>
+          <pre>{{ imglist.map(e=>'https:'+e).join('\n') }}</pre>
+        </div>
       </Spin>
-    </a-layout>
+      </Col>
+    </Row>
   </div>
 </template>
 
 <script>
+import { handleError, handleSuccess, handleWarning, closeOne } from "@/utils";
+import { Row, Col } from 'ant-design-vue';
 export default {
+  components: {
+    Row, Col
+  },
   data() {
     return {
       formLayout: "horizontal",
       form: this.$form.createForm(this, { name: "readbcv" }),
       activeKey: [],
       loading: false,
+      loadimg: false,
+      imglist: [],
+      lastwarn: {},
       decorators: {
         URL: [
           "BCVURL",
@@ -60,17 +92,68 @@ export default {
       e.preventDefault();
       this.form.validateFields((err, values) => {
         if (!err) {
-          console.log("Received values of form: ", values);
-          this.loading = true
-          setTimeout(()=>this.loading = false,5000)
+          this.loading = true;
+          this.initWebSocket(values);
         }
       });
     },
-    handleSelectChange(value) {
-      console.log(value);
-      this.form.setFieldsValue({
-        note: `Hi, ${value === "male" ? "man" : "lady"}!`
-      });
+    OnLoadImgChange(e) {
+      this.loadimg = e.target.checked;
+      if (this.lastwarn) {
+        closeOne(this.lastwarn)
+        this.lastwarn = {}
+      }
+      if (e.target.checked && this.imglist.length) {
+        this.lastwarn = handleWarning("注意", "已开启加载图片功能，请留意流量消耗", 30)
+      }
+    },
+    getName(url) {
+      let l = url.split("/");
+      return l[l.length - 1];
+    },
+    initWebSocket(values) {
+      //初始化weosocket
+      const https = /^http(s)?:$/.exec(window.location.protocol)[1] || "";
+      const wsuri = `ws${https}://${window.location.host}/api/v1/readcv`;
+      this.websock = new WebSocket(wsuri);
+      this.websock.onopen = () => {
+        this.websocketsend(JSON.stringify(values));
+      };
+      this.websock.onmessage = this.websocketonmessage;
+      this.websock.onerror = this.websocketonerror;
+      this.websock.onclose = this.websocketclose;
+    },
+    websocketonerror() {
+      //连接建立失败重连
+      handleError("获取失败", "无法连接到服务器", 30);
+      this.loading = false;
+    },
+    websocketonmessage(e) {
+      //数据接收
+      const redata = JSON.parse(e.data);
+      const fromcache = redata.fromcache || false;
+      this.loading = false;
+      this.imglist = redata.imgs;
+      if (fromcache) handleSuccess("获取成功", "已加载缓存中的图片列表", 10);
+      else handleSuccess("获取成功", "已加载图片列表", 10);
+      if (this.loadimg)
+        setTimeout(
+          () => {
+            if (this.lastwarn) closeOne(this.lastwarn)
+            this.lastwarn = handleWarning("注意", "已开启加载图片功能，请留意流量消耗", 30)
+          },
+          100
+        );
+    },
+    websocketsend(Data) {
+      //数据发送
+      this.websock.send(Data);
+    },
+    websocketclose(e) {
+      //关闭
+      console.log(e)
+      if (e.code !== 1000 && e.code !== 1006) handleError("获取失败", e.reason || "未知错误", 30);
+      this.loading = false;
     }
   }
 };
@@ -78,10 +161,22 @@ export default {
 
 <style>
 .form {
-  margin-top: 32px;
+  margin-top: 8px;
 }
-.result {
-  background-color: white;
-  margin: 16px 64px 0;
+.result img {
+  max-width: 100%;
+  max-height: 40vh;
+  /* height: auto; */
+}
+.warn {
+  margin-bottom: 10px;
+}
+.warn p {
+  margin-bottom: 0;
+  margin-left: 4.6rem;
+  line-height: initial;
+}
+.warn p:first-child {
+  margin: 0;
 }
 </style>

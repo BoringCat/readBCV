@@ -3,8 +3,8 @@
     <div id="app">
       <a-layout>
         <a-layout-header class="header logo">
-          BCVReader 提取B站专栏图片
-        </a-layout-header>
+          BCVReader —— 提取B站专栏图片
+        </a-layout-header>        
         <a-layout class="layout">
           <ReadBCV />
         </a-layout>

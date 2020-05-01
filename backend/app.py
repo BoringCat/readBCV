@@ -18,10 +18,10 @@ signal.signal(2, lambda: None)
 loop.add_signal_handler(15, stop_handler, 15, loop, fatherlog)
 loop.add_signal_handler(2, stop_handler, 2, loop, fatherlog)
 
-addr = environ.get('APP_LISTEN', 'localhost')
+addr = environ.get('APP_LISTEN', '0.0.0.0')
 port = int(environ.get('APP_PORT', '8765'))
 path = environ.get('APP_PATH', '/')
-
+fatherlog.info('Listen %s:%s At Path = %s' %(addr, port, path))
 start_server = websockets.serve(readbcv, addr, port)
 loop.run_until_complete(start_server)
 loop.run_forever()

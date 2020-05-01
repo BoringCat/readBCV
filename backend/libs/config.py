@@ -27,7 +27,7 @@ class _NoneLog():
         except Exception:
             return self._allNone
 
-class envconfig():
+class _envconfig():
     def __init__(self, fatherlog = None):
         if not fatherlog:
             self._log = _NoneLog()
@@ -49,9 +49,11 @@ class envconfig():
         return self._setting.get(Name,Default)
 
     def readConfigs(self, *Names, Default = None):
-        self._log.debug('读取 %s ' % Names)
+        self._log.debug('读取 %s ' % str(Names))
         return ( self._setting.get(Name,Default) for Name in Names )
 
     def readConfigdict(self, *Names, Default = None):
-        self._log.debug('读取 %s ' % Names)
+        self._log.debug('读取 %s ' % str(Names))
         return { Name:self._setting.get(Name,Default) for Name in Names }
+
+envconfig = _envconfig()
