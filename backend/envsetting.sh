@@ -1,3 +1,3 @@
-BACKEND='beautifulsoup4 mongoengine sqlalchemy'
+BACKEND='mongoengine sqlalchemy pymysql'
 API='websockets'
-LIBS='requests'
+LIBS='requests beautifulsoup4'

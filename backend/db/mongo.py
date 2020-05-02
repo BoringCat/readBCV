@@ -22,8 +22,8 @@ class tempdb():
                 cachetime = self.cachetime.strftime('%Y-%m-%d %H:%M:%S')
             )
 
-    def __init__(self, host = "localhost", port = 27017, user = "nckey",
-                 password = "ncsshkey", database = "nckey", authdb = None, fatherlog = None):
+    def __init__(self, host = "localhost", port = 27017, user = "readbcv",
+                 password = "readbcv", database = "readbcv", authdb = None, fatherlog = None):
         self._log = fatherlog.getChild('TempDB') if fatherlog else logging.getLogger('TempDB')
         self._host = host
         self._port = port
