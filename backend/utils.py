@@ -62,13 +62,13 @@ class GetCVAsync():
         self._session = session()
 
     def filter_headers(self, headers):
-        headers.pop('Host')
-        headers.pop('Upgrade')
-        headers.pop('Connection')
-        headers.pop('Origin')
+        headers.pop('Host', None)
+        headers.pop('Upgrade', None)
+        headers.pop('Connection', None)
+        headers.pop('Origin', None)
         for k in list(headers.keys()):
             if 'websocket' in k.lower():
-                headers.pop(k)
+                headers.pop(k, None)
 
     async def GetQueue(self, interval = 10):
         while self._GoRUN:
@@ -84,7 +84,8 @@ class GetCVAsync():
                     asyncio.run_coroutine_threadsafe(callback(False, None, res, loop),loop)
             except Empty:
                 pass
-            except Exception:
+            except Exception as err:
+                self._log.getChild('GetQueue').error("Type: %s, msg: %s" % (type(err),str(err)))
                 asyncio.run_coroutine_threadsafe(callback(False, None, None, loop),loop)
             finally:
                 await asyncio.sleep(interval)

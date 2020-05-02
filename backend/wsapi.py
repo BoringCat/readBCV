@@ -58,6 +58,7 @@ async def readbcv(websocket:websockets.server.WebSocketServerProtocol, path):
         await websocket.close()
         return
     status, msg = getcv.Get(url, websocket.request_headers, callback, get_event_loop())
+    fatherlog.debug('Status: %s, msg: %s' % (status, msg))
     if not status:
         await (websocket.close(1001, "服务器限制") if msg == 'Full' else websocket.close(1001, "内部错误"))
         return
