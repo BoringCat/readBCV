@@ -23,3 +23,6 @@ yarn-error.log*
 
 # Python TempFile
 __pycache__/
+
+# custom local files
+*.local.*
