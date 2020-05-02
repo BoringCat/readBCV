@@ -80,6 +80,7 @@ services:
     links:
       - readbcv_db:db
     environment:
+      DB_TYPE: Mongo
       DB_HOST: db
       DB_PORT: 27017
       DB_USER: readbcv
