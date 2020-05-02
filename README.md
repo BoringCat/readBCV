@@ -2,7 +2,7 @@
 
 [![Docker Image](https://img.shields.io/badge/docker%20image-available-green.svg)](https://hub.docker.com/r/boringcat/readbcv/)
 
-[English Version](/BoringCat/readBCV/blob/master/README.en_US.md)
+[English Version](/blob/master/README.en_US.md)
 
 ## 介绍
 readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
