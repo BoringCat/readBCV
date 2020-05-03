@@ -94,12 +94,14 @@ export default {
               {
                 required: true,
                 validator(rule, value, callback) {
-                  if (
-                    /^https?:\/\/www.bilibili.com\/read\/cv\d+$/.test(value)
-                  ) {
+                  if (/^https?:\/\/www.bilibili.com\/read\/cv\d+$/.test(value)) {
+                    callback();
+                  } else if (/^cv\d+$/.test(value)) {
+                    callback();
+                  } else if (/^\d+$/.test(value)) {
                     callback();
                   } else {
-                    callback("请输入B站的专栏地址");
+                    callback("请输入B站的专栏地址，如: https://www.bilibili.com/read/cv5743037 或 cv5743037");
                   }
                 }
               }
@@ -114,8 +116,11 @@ export default {
       e.preventDefault();
       this.form.validateFields((err, values) => {
         if (!err) {
+          let postval = {...values}
           this.loading = true;
-          this.initWebSocket(values);
+          if (/^\d+$/.test(value)) postval['BCVURL'] = `https://www.bilibili.com/read/cv${values['BCVURL']}`
+          else if (/^cv\d+$/.test(value)) postval['BCVURL'] = `https://www.bilibili.com/read/${values['BCVURL']}`
+          this.initWebSocket(postval);
         }
       });
     },

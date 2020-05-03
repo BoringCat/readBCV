@@ -22,9 +22,16 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 服务器缓存数据时间为7天  
 
 ## 更新版本
-### 2020/05/02
-  - 添加 MySQL/Mariadb 数据库支持
-  - 完善 README
+### 2020/05/03
+  - 允许直接输入 `cv\d+`
+<details>
+ <summary>2020/05/02</summary>
+
+- 添加 MySQL/Mariadb 数据库支持
+- 完善 README
+
+</details>
+
 <details>
  <summary>2020/05/01</summary>
 

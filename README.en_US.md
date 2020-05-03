@@ -22,9 +22,16 @@ Avoid Bilibili return 421 when access too fast. Each access from server limit at
 The data for each article will keep a week  
 
 ## Change logs
-### 2020/05/02
+### 2020/05/03
+  - Allow input `cv\d+` direct.
+<details>
+ <summary>2020/05/02</summary>
+
   - Add support for MySQL/Mariadb
   - Complete README.md
+
+</details>
+
 <details>
  <summary>2020/05/01</summary>
 
