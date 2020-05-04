@@ -118,8 +118,8 @@ export default {
         if (!err) {
           let postval = {...values}
           this.loading = true;
-          if (/^\d+$/.test(value)) postval['BCVURL'] = `https://www.bilibili.com/read/cv${values['BCVURL']}`
-          else if (/^cv\d+$/.test(value)) postval['BCVURL'] = `https://www.bilibili.com/read/${values['BCVURL']}`
+          if (/^\d+$/.test(values['BCVURL'])) postval['BCVURL'] = `https://www.bilibili.com/read/cv${values['BCVURL']}`
+          else if (/^cv\d+$/.test(values['BCVURL'])) postval['BCVURL'] = `https://www.bilibili.com/read/${values['BCVURL']}`
           this.initWebSocket(postval);
         }
       });
