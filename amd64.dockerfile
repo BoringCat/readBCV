@@ -26,7 +26,7 @@ FROM amd64/python:3.7-alpine
 ARG apkmirror=mirrors.sjtug.sjtu.edu.cn
 ARG pipmirror=https://pypi.tuna.tsinghua.edu.cn/simple
 
-COPY --from=qemu_downloader /usr/bin/qemu-amd64-static /usr/bin/
+COPY --from=qemu_downloader /usr/bin/qemu-x86_64-static /usr/bin/
 COPY backend /app
 WORKDIR /app
 
