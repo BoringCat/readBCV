@@ -27,7 +27,3 @@ manifests:
     platform:
       architecture: s390x
       os: linux
-  - image: boringcat/readbcv:ppc64le-latest
-    platform:
-      architecture: ppc64le
-      os: linux
