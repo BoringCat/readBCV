@@ -48,6 +48,11 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 
 
 ## 部署
+### 版本号说明
+- latest：最新64位版本
+- _$arch_-latest：最新 _$arch_ 版本
+- _$arch_-%Y-%m-%d：_$arch_ 架构的Tag版本
+
 ### 数据库支持
 
 |数据库|支持度|
@@ -55,10 +60,6 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 |SQLite|<li>仅内存数据库</li><li>自动创建表</li><li>读写</li>|
 |MySQL/Mariadb|<li>自动创建表</li><li>读写</li>|
 |Mongo|<li>自动创建表</li><li>读写</li>|
-
-### 版本号说明
-- latest：最新版本
-- build-%Y-%m-%d：Tag版本
 
 ### 环境变量说明
 
@@ -71,30 +72,6 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 |DB_PASSWD|连接数据库的密码| - |
 |DB_NAME|数据库的库名| - |
 |DB_AUTHDB|Mongo数据库的认证库名|与DB_NAME相同|
-
-### x86、ARM用户？
-你需要做的是： 构建fontend中的前端页面（完成后是静态文件）、构建一个带有Nginx和Python的Docker镜像，并支持安装所有的Python依赖包
-
-0. 确保你可以在目标架构中运行这些程序和包
-   | 程序 | 包 |
-   | :----: | :-- |
-   | Nginx  |  -  |
-   | Python | <ul><li>supervisor</li><li>mongoengine</li><li>sqlalchemy</li><li>pymysql</li><li>websockets</li><li>requests</li><li>beautifulsoup4</li></ul> |
-1. 将Dockerfile中前六步拷贝出来到新的Dockerfile.fontend
-2. 将Dockerfile中其余步骤拷贝出来到新的Dockerfile.backend
-3. 修改 Dockerfile.backend 中 
-   ```
-   COPY --from=WebBuilder --chown=nginx:nginx /tmp/dist /www/BCVReader
-   ```
-   为 
-   ```
-   COPY dist /www/BCVReader
-   ```
-4. 在高性能主机上，按照Dockerfile.fontend中的步骤，在一个 `docker run` 启动的容器中编译前端
-5. 将编译好的前端文件夹通过 `docker cp` 拷贝到主机中Dockerfile.backend所在文件夹，并重命名为dist
-6. 将 Dockerfile.backend 与 dist文件夹 拷贝到目标架构主机上
-7. 运行 `docker build` 得到镜像
-
 
 ### docker-compose（推荐）
 ``` yaml

@@ -1,23 +1,39 @@
+FROM debian:10-slim as qemu_downloader
+ARG aptmirror=mirrors.tuna.tsinghua.edu.cn
+RUN set -xe\
+ && echo "deb http://${aptmirror}/debian buster main" > /etc/apt/sources.list\
+ && apt-get update\
+ && apt-get install --no-install-recommends qemu-user-static
+
 FROM node:lts-alpine as WebBuilder
+ARG apkmirror=mirrors.sjtug.sjtu.edu.cn
+ARG npmmirror=https://registry.npm.taobao.org
 
 COPY fontend /app
 WORKDIR /app
 RUN set -xe\
  && cd /app\
+ && sed -i "s/dl-cdn.alpinelinux.org/${apkmirror}/g" /etc/apk/repositories\
  && apk add --no-cache git\
+ && yarn config set registry "${npmmirror}"\
  && yarn install\
  && yarn build\
  && mv /app/dist /tmp/dist\
  && cd /\
  && rm -r /app
 
-FROM python:3.7-alpine
+FROM arm32v7/python:3.7-alpine
+ARG apkmirror=mirrors.sjtug.sjtu.edu.cn
+ARG pipmirror=https://pypi.tuna.tsinghua.edu.cn/simple
 
+COPY --from=qemu_downloader /usr/bin/qemu-arm-static /usr/bin/
 COPY backend /app
 WORKDIR /app
 
 RUN set -xe\
+ && sed -i "s/dl-cdn.alpinelinux.org/${apkmirror}/g" /etc/apk/repositories\
  && apk add --update --no-cache gcc musl-dev net-snmp-dev nginx\
+ && pip config set global.index-url ${pipmirror}\
  && cd /app/\
  && source ./envsetting.sh\
  && pip install --no-cache-dir -U supervisor $BACKEND $API $LIBS\

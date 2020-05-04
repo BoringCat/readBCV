@@ -49,9 +49,10 @@ The data for each article will keep a week
 ## Deploy
 ### WARN!
 **Maybe some comment in source code is in English. But in most cases. It is in Chinese.**
-### Version variants
-- `latest`: The latest build (Same as latest build-*)
-- build-%Y-%m-%d: Version for each tag.
+### Version Variants
+- latest: latest version for amd64
+- _$arch_-latest: latest version for _$arch_
+- _$arch_-%Y-%m-%d: Tag version for _$arch_
 
 ### Database Support
 
@@ -60,10 +61,6 @@ The data for each article will keep a week
 |SQLite|<li>Memory database only</li><li>Automatic create tables</li><li>rw</li>|
 |MySQL/Mariadb|<li>Automatic create tables</li><li>rw</li>|
 |Mongo|<li>Automatic create tables</li><li>rw</li>|
-
-### Version Variants
-- latest: latest version
-- build-%Y-%m-%d: Tag version
 
 ### Environment Variables
 
@@ -76,31 +73,6 @@ The data for each article will keep a week
 |DB_PASSWD|Password of database| - |
 |DB_NAME|Database name to use| - |
 |DB_AUTHDB|Auth database for MongoDB|Same as DB_NAME|
-
-### CPU architecture not X86_64? 
-What should i do?  
-Firstly build website files in fontend. Then you get static files  
-Secondly build an docker image with Nginx and Python support. With need to support all packages depended on python
-
-0. Make sure you can run all packages following
-   |program| packages |
-   | :----: | :-- |
-   | Nginx  |  -  |
-   | Python | <ul><li>supervisor</li><li>mongoengine</li><li>sqlalchemy</li><li>pymysql</li><li>websockets</li><li>requests</li><li>beautifulsoup4</li></ul> |
-1. Copy step 1-6 from Dockerfile to Dockerfile.frontend for reference.
-2. Copy step 7-\<end> from Dockerfile to Dockerfile.backend.
-3. Modify Dockerfile.backend. Change 
-   ```
-   COPY --from=WebBuilder --chown=nginx:nginx /tmp/dist /www/BCVReader
-   ```
-   to
-   ```
-   COPY dist /www/BCVReader
-   ```
-4. Switch to a high performance host. Foller the step in Dockerfile.frontend to build static frontend website files.
-5. Use `docker cp` to copy frontend's directory to host. And rename it to "dist"
-6. Copy "Dockerfile.backend" and "dist" to a host with target architecture (or use vm).
-7. Use `docker build` to build the image
 
 ### Use docker-compose (recommend)
 ``` yaml
