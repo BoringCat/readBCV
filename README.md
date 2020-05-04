@@ -49,8 +49,7 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 
 ## 部署
 ### 版本号说明
-- latest：最新64位版本
-- _$arch_-latest：最新 _$arch_ 版本
+- latest：最新版本
 - _$arch_-%Y-%m-%d：_$arch_ 架构的Tag版本
 
 ### 数据库支持

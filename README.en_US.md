@@ -50,8 +50,7 @@ The data for each article will keep a week
 ### WARN!
 **Maybe some comment in source code is in English. But in most cases. It is in Chinese.**
 ### Version Variants
-- latest: latest version for amd64
-- _$arch_-latest: latest version for _$arch_
+- latest: latest version
 - _$arch_-%Y-%m-%d: Tag version for _$arch_
 
 ### Database Support
