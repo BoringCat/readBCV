@@ -23,6 +23,8 @@ The data for each article will keep a week
 ## Change logs
 ### 2020/05/05
   - It can deal with cover now
+  - Support language "Simplified Chinese", "Traditional Chinese" and "English (United States)"
+  - Support "Dark Mode"
 
 <details>
  <summary>2020/05/04</summary>
@@ -82,6 +84,8 @@ The data for each article will keep a week
 
 |Environment|What's Mean|Default|
 |:-:|:-:|:-:|
+|VIEW|Output log level info| false |
+|DEBUG|Output log level debug| false |
 |DB_TYPE|Type of database| SQLite |
 |DB_HOST|Address of database| - |
 |DB_PORT|Port of database| - |
