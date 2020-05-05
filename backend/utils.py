@@ -34,8 +34,10 @@ def start_loop(loop:asyncio.BaseEventLoop):
 
 def readCV(webtext):
     bs = BeautifulSoup(webtext, features="html.parser")
+    haveHead = bs.find('meta', {'data-hid': "og:image"})
+    head_img = haveHead.attrs.get('content') if haveHead else None
     ulist = tuple(filter(lambda x:bool(x), map(lambda x:x.attrs.get('data-src'), bs.find('div','article-holder').find_all('img'))))
-    return ['@'.join(u.split('@')[:-1]) if '@' in u else u for u in ulist]
+    return { 'header': head_img, 'contents': ['@'.join(u.split('@')[:-1]) if '@' in u else u for u in ulist] }
 
 def getCVid(url):
     return int(url.split('/')[-1][2:])

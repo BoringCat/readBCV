@@ -2,4 +2,5 @@ fontend/node_modules
 backend/.venv
 **/__pycache__
 *.dockerfile
-.docker_hub_dockerfile
+**.local.*
+**.local
