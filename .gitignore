@@ -26,3 +26,4 @@ __pycache__/
 
 # custom local files
 *.local.*
+*.local

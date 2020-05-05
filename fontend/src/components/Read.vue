@@ -35,7 +35,7 @@
       </a-form-item>
     </a-form>
     <hr />
-    <Row v-if="imglist.length" class="result">
+    <Row v-if="contents.length" class="result">
       <Col
         :xs="{span:22, offset:1}"
         :sm="{span:20, offset:2}"
@@ -47,21 +47,21 @@
         <Spin :spinning="loading" :delay="500" tip="后端限流，等待后端返回中......">
           <h2>结果</h2>
           <a-collapse v-if="loadimg" v-model="activeKey">
-            <a-collapse-panel v-for="img in imglist" :key="img" :header="getName(img)">
+            <a-collapse-panel v-for="{img, isheader} in contents" :key="img" :header="(isheader?'封面: ':'') + getName(img)">
               <div style="text-align: center;">
-                <a @click="downloadByBlob('https:'+img, getName(img))">
-                  <img :src="'https:'+img" />
+                <a @click="downloadByBlob(img, getName(img))">
+                  <img :src="img" />
                 </a>
               </div>
             </a-collapse-panel>
           </a-collapse>
-          <div v-else v-for="img in imglist" :key="img">
+          <div v-else v-for="{img, isheader} in contents" :key="img">
             <hr />
-            <a @click="downloadByBlob('https:'+img, getName(img))">{{ getName(img) }}</a>
+            <a @click="downloadByBlob(img, getName(img))">{{ (isheader?'封面: ':'') + getName(img) }}</a>
           </div>
           <div>
             <h3>批量链接：</h3>
-            <pre>{{ imglist.map(e=>'https:'+e).join('\n') }}</pre>
+            <pre>{{ contents.map(e=>e.img).join('\n') }}</pre>
           </div>
         </Spin>
       </Col>
@@ -84,7 +84,7 @@ export default {
       activeKey: [],
       loading: false,
       loadimg: false,
-      imglist: [],
+      contents: [],
       lastwarn: {},
       decorators: {
         URL: [
@@ -130,7 +130,7 @@ export default {
         closeOne(this.lastwarn);
         this.lastwarn = {};
       }
-      if (e.target.checked && this.imglist.length) {
+      if (e.target.checked && this.contents.length) {
         this.lastwarn = handleWarning(
           "注意",
           "已开启加载图片功能，请留意流量消耗",
@@ -163,8 +163,15 @@ export default {
       //数据接收
       const redata = JSON.parse(e.data);
       const fromcache = redata.fromcache || false;
+      let have_header = false
+      let header = redata.imgs.header;
       this.loading = false;
-      this.imglist = redata.imgs;
+      this.contents = redata.imgs.contents.map(e=>{
+        let isheader = this.getName(e) === this.getName(header)
+        if (! have_header) if (isheader) have_header = true
+        return {img: 'https:'+e, isheader}
+      });
+      if (! have_header) this.contents.unshift({img: header, isheader: true})
       if (fromcache) handleSuccess("获取成功", "已加载缓存中的图片列表", 10);
       else handleSuccess("获取成功", "已加载图片列表", 10);
       if (this.loadimg)

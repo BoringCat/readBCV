@@ -8,6 +8,8 @@ cd `dirname $0`
 
 source ./envsetting.sh
 
+PY3_VERSION=$(python3 -V | cut -d' ' -f2| cut -d. -f1-2 | sed 's/\.//g')
+
 create(){
     if [ ! -d "$AIM" ]; then python3 -m virtualenv -p $(command -v python3) --no-download $AIM; fi
 }
@@ -15,7 +17,7 @@ create(){
 update(){
     source $AIM/bin/activate
     pip install -U pip wheel setuptools pylint $BACKEND $API $LIBS
-    venvlib=$(realpath .venv/lib/python3.*)
+    [ $PY3_VERSION -gt 37 ] && venvlib=$(realpath .venv/lib/python3.*/site-packages) || venvlib=$(realpath .venv/lib/python3.*)
     for py in libs/*.py
     do
     ln -rvsf $py ${venvlib}/

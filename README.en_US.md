@@ -11,7 +11,6 @@ readBCV(BCVReader) is a website for extract and create download links for images
 
 ### Shortcoming
 - Limit speed from server. (Will get 421 if too fast)
-- Unable to get Cover. (It generated at `window.onload`)
 
 ### 
 
@@ -22,8 +21,26 @@ Avoid Bilibili return 421 when access too fast. Each access from server limit at
 The data for each article will keep a week  
 
 ## Change logs
-### 2020/05/03
+### 2020/05/05
+  - It can deal with cover now
+
+<details>
+ <summary>2020/05/04</summary>
+
+  - Add multi architecture support  
+    Now supported x86 x86_64 arm32v6 arm32v7 arm64v8 s390x  
+
+    Test with RPI ZW. Database on Synology DS718p docker. I can get about 100ms to 180ms response time in cache mode. And about 1s to 1.4s response time in processing mode
+
+</details>
+
+<details>
+ <summary>2020/05/03</summary>
+
   - Allow input `cv\d+` direct.
+
+</details>
+
 <details>
  <summary>2020/05/02</summary>
 
