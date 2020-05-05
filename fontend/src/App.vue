@@ -83,11 +83,18 @@ export default {
   .layout {
     background-color: #222;
   }
-  .select .ant-select-selection {
+  .select .ant-select-selection, .ant-notification-notice {
     background-color: #111;
   }
-  .ant-select-dropdown-menu-item, .ant-select-dropdown-menu-item-selected, .select.ant-select {
+  .ant-select-dropdown-menu-item, .ant-select-dropdown-menu-item-selected, .select.ant-select,
+  .ant-notification-notice-message, .ant-progress-circle .ant-progress-text {
     color: #EEE;
+  }
+  .ant-notification-notice-close:hover {
+    color: cornflowerblue;
+  }
+  .ant-notification, .ant-notification-notice-close {
+    color: #CCC;
   }
   .ant-select-dropdown, .ant-select-dropdown-menu-item-selected {
     background-color: #2C2C2C;

@@ -248,11 +248,18 @@ export default {
   margin: 0;
 }
 @media (prefers-color-scheme: dark) {
-  .warn, .form .ant-form-item-required, .form .ant-checkbox-wrapper, .form .ant-input {
+  .warn, .form .ant-form-item-required, .form .ant-checkbox-wrapper, .form .ant-input, .result h2, .result h3,
+  .result .ant-collapse > .ant-collapse-item > .ant-collapse-header {
     color: #EEE;
   }
-  .form .ant-input, .form .ant-input:hover {
+  .result pre {
+    color: #BBB;
+  }
+  .form .ant-input, .form .ant-input:hover, .result .ant-collapse {
     background-color: #111;
+  }
+  .result .ant-collapse-content {
+    background-color: #2c2c2c;
   }
 }
 </style>
