@@ -23,6 +23,8 @@ The data for each article will keep a week
 ## Change logs
 ### 2020/05/05
   - It can deal with cover now
+  - Support language "Simplified Chinese", "Traditional Chinese" and "English (United States)"
+  - Support "Dark Mode"
 
 <details>
  <summary>2020/05/04</summary>
@@ -63,6 +65,10 @@ The data for each article will keep a week
 3. Check the button.
 4. Now you get link for each picture in article. Enjoy!
 
+## How to add translate?
+Run `fontend/gen_i18njs.sh <localeName>`. Then motify `fontend/src/i18n/<locateName>.js` and variable langs in `App.vue`.
+**gen_i18njs.sh is depend on grep, tac, head, cut, sed, let. With should be installed by base package in each distribution**
+
 ## Deploy
 ### WARN!
 **Maybe some comment in source code is in English. But in most cases. It is in Chinese.**
@@ -82,6 +88,8 @@ The data for each article will keep a week
 
 |Environment|What's Mean|Default|
 |:-:|:-:|:-:|
+|VIEW|Output log level info| false |
+|DEBUG|Output log level debug| false |
 |DB_TYPE|Type of database| SQLite |
 |DB_HOST|Address of database| - |
 |DB_PORT|Port of database| - |

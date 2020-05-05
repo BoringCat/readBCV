@@ -23,6 +23,8 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 ## 更新版本
 ### 2020/05/05
   - 现在可以获取封面了
+  - 支持三种语言： "简体中文"、"繁体中文"、"英语（美国）"
+  - 支持暗色主题
 
 <details>
  <summary>2020/05/04</summary>
@@ -63,6 +65,9 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 3. 点击分析
 4. 复制批量链接到下载器，或点击链接（图片）下载文件，也可以右键图片另存为 ~~（反正显示图片又不用我服务器的流量）~~
 
+## 增添翻译方法
+运行 `fontend/gen_i18njs.sh <localeName>`，然后修改 `fontend/src/i18n/<locateName>.js` 和 App.vue 中的 langs 变量即可
+**gen_i18njs.sh 依赖于 grep, tac, head, cut, sed, let. 这些命令应该内置与shell中或在每个发行版中最小化安装时安装**
 
 ## 部署
 ### 版本号说明
@@ -81,6 +86,8 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 
 |环境变量|用途|默认情况|
 |:-:|:-:|:-:|
+|VIEW|详细输出模式| false |
+|DEBUG|调试模式| false |
 |DB_TYPE|数据库类型| SQLite |
 |DB_HOST|数据库地址| - |
 |DB_PORT|数据库端口| - |
