@@ -65,6 +65,10 @@ The data for each article will keep a week
 3. Check the button.
 4. Now you get link for each picture in article. Enjoy!
 
+## How to add translate?
+Run `fontend/gen_i18njs.sh <localeName>`. Then motify `fontend/src/i18n/<locateName>.js` and variable langs in `App.vue`.
+**gen_i18njs.sh is depend on grep, tac, head, cut, sed, let. With should be installed by base package in each distribution**
+
 ## Deploy
 ### WARN!
 **Maybe some comment in source code is in English. But in most cases. It is in Chinese.**
