@@ -1,5 +1,5 @@
 import logging
-import sys
+from config import envconfig
 from bs4 import BeautifulSoup
 import asyncio
 from threading import Thread
@@ -16,8 +16,8 @@ def createLogger(name):
     return logging.getLogger(name)
 
 def _init_logconfig():
-    view = '--view' in sys.argv
-    debug = '--debug' in sys.argv
+    view = envconfig.get('VIEW', False)
+    debug = envconfig.get('DEBUG', False)
     logconfig = {
         'level': logging.DEBUG if debug else logging.INFO if view else logging.WARN,
         'format': "[%(asctime)s][%(levelname)s][%(name)s]: %(message)s",
