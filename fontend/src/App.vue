@@ -3,12 +3,14 @@
     <a-layout>
       <a-layout-header class="header logo">
         <span>{{ $t("title") }}</span>
+        <a title="GitHub - BoringCat/readBCV" class="togithub" href="https://github.com/BoringCat/readBCV" target="_blank">
+        <github :size="20" class="gitimg" />
+        readBCV
+        </a>
       </a-layout-header>
       <a-layout class="layout">
         <div>
-          <a-select class="select" v-model="$i18n.locale" @change="localeOnChange">
-            <a-select-option v-for="({lang, name}, i) in langs" :key="`Lang${i}`" :value="lang">{{ name }}</a-select-option>
-          </a-select>
+          <I18nSwitch />
         </div>
         <ReadBCV />
       </a-layout>
@@ -17,7 +19,9 @@
 </template>
 
 <script>
-import ReadBCV from "./components/Read.vue";
+import ReadBCV from "@/components/Read.vue";
+import I18nSwitch from "@/components/I18nSwitch.vue";
+import github from "@/icons/github.vue";
 
 export default {
   name: "App",
@@ -35,19 +39,11 @@ export default {
   },
   components: {
     ReadBCV,
+    I18nSwitch,
+    github
   },
   data() {
-    return { langs: [
-      { lang: 'zh_CN', name: "简体中文" },
-      { lang: 'en_US', name: "English (United States)" },
-      { lang: 'zh_TW', name: "繁体中文" }
-    ]};
-  },
-  methods: {
-    localeOnChange(e) {
-      document.title = this.$t("title")
-      document.cookie = `locale=${e};expires=${new Date("9999-12-31 23:59:59").toGMTString()}`
-    }
+    return { };
   }
 };
 </script>
@@ -66,25 +62,35 @@ export default {
   font-size: 1.2rem;
   font-weight: bold;
   float: left;
+  height: auto;
   color: white;
-}
-.select {
-  float: right;
-  min-width: 190px;
-  margin-top: 0.75rem;
-  margin-right: 1rem;
-  z-index: 999;
 }
 .layout {
   min-height: calc(100vh - 64px);
   background-color: white;
 }
+.togithub {
+  font-weight: initial;
+  font-size: 0.9rem;
+  color: white;
+  float: right;
+}
+@media (min-width: 576px) {
+  .togithub {
+    margin-left: -10rem;
+  }
+}
+.togithub:hover {
+  color: white;
+}
+
+.gitimg {
+  margin-bottom: -0.35rem;
+}
+
 @media (prefers-color-scheme: dark) {
   .layout {
     background-color: #222;
-  }
-  .select .ant-select-selection, .ant-notification-notice {
-    background-color: #111;
   }
   .ant-select-dropdown-menu-item, .ant-select-dropdown-menu-item-selected, .select.ant-select,
   .ant-notification-notice-message, .ant-progress-circle .ant-progress-text {
@@ -95,14 +101,6 @@ export default {
   }
   .ant-notification, .ant-notification-notice-close {
     color: #CCC;
-  }
-  .ant-select-dropdown, .ant-select-dropdown-menu-item-selected {
-    background-color: #2C2C2C;
-  }
-  .ant-select-dropdown-menu-item:hover:not(.ant-select-dropdown-menu-item-disabled),
-  .ant-select-dropdown-menu-item-active:not(.ant-select-dropdown-menu-item-disabled) {
-    background-color: #191919;
-  }
-  
+  }  
 }
 </style>

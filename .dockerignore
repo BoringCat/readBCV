@@ -4,3 +4,4 @@ backend/.venv
 *.dockerfile
 **.local.*
 **.local
+**.log

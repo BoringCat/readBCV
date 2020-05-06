@@ -11,7 +11,7 @@
         :wrapper-col="{ xs: {span: 22, offset: 1}, sm: { span: 16, offset: 4 }}"
         class="warn"
       >
-        <p>{{ $t("message.warninfo.l1") }}<strong>{{ $t("message.warninfo.l1Strong") }}</strong></p>
+        <p><strong>{{ $t("message.warninfo.title") }}</strong>{{ $t("message.warninfo.l1") }}<strong>{{ $t("message.warninfo.l1Strong") }}</strong></p>
         <p><s>{{ $t("message.warninfo.l2") }}</s></p>
         <p>{{ $t("message.warninfo.l3") }}</p>
         <p>{{ $t("message.warninfo.l4") }}</p>
@@ -241,7 +241,7 @@ export default {
 }
 .warn p {
   margin-bottom: 0;
-  margin-left: 4.6rem;
+  margin-left: 1rem;
   line-height: initial;
 }
 .warn p:first-child {

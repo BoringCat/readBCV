@@ -9,6 +9,7 @@ echo -e "const title = ''\n\
 \n\
 const message = {\n\
     warninfo: {\n\
+        title: ''\n\
         l1: '',\n\
         l1Strong: '',\n\
         l2: '',\n\
