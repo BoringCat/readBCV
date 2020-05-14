@@ -16,7 +16,7 @@ const message = {
     result: "Result",
     cover: "This is Cover: ",
     linkList: "linkList",
-    inputErrorMsg: "Please input Bilibili Article's URL: https://www.bilibili.com/read/cv0000000 Or cv0000000",
+    inputErrorMsg: "Please input Bilibili Object ID like cv0000000 Or BVabcdef123",
     warning: 'Warning',
     loadImageIsOpen: 'Will load image now. Please care about network traffic limit',
     loadFailed: 'Failed',

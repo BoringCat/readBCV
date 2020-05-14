@@ -1,4 +1,4 @@
-from sqlalchemy import Column, MetaData, create_engine, or_, Integer, JSON, DateTime
+from sqlalchemy import Column, MetaData, create_engine, or_, String, JSON, DateTime
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import timedelta, datetime
@@ -12,7 +12,7 @@ class tempdb():
     class cvcache(_Base):
         __tablename__ = 'cvcache'
 
-        cvid = Column(Integer(), primary_key = True, autoincrement = False, nullable = False)
+        cvid = Column(String(50), primary_key = True, autoincrement = False, nullable = False)
         imglist = Column(JSON(), nullable = False)
         cachetime = Column(DateTime(), nullable = False)
 

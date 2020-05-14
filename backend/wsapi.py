@@ -6,6 +6,9 @@ from config import envconfig
 from utils import getCVid
 from db import CacheDB as db
 
+fatherlog = createLogger('ReadBCV')
+getcv = GetCVAsync(fatherlog)
+
 def disconnect(msg):
     '''WebSocket格式化断开信息
 
@@ -34,12 +37,12 @@ async def readbcv(websocket:websockets.server.WebSocketServerProtocol, path):
       - websocket: websocket对象
       - path: 连接的路径
     '''
-    fatherlog = createLogger('readbcv_ws')
+    global fatherlog, getcv
+    logger = fatherlog.getChild('ws')
     econf = envconfig
     glo_path = econf.get('APP_PATH', '/')
     lock = Lock(loop=get_event_loop())
-    getcv = GetCVAsync(fatherlog)
-    fatherlog.debug('path = %s' % path)
+    logger.debug('path = %s' % path)
     if path != glo_path:
         await websocket.close(1001, "Path error")
         return
@@ -61,7 +64,7 @@ async def readbcv(websocket:websockets.server.WebSocketServerProtocol, path):
             else:                   # 其他错误
                 await websocket.send(response(status = False, errmsg = '内部错误'))
         lock.set()                  # 解除阻塞
-        fatherlog.getChild('callback').debug('UnLock!')
+        logger.getChild('callback').debug('UnLock!')
 
     try:                            # 尝试获取请求内容
         postdict = loads(await websocket.recv())
@@ -69,22 +72,22 @@ async def readbcv(websocket:websockets.server.WebSocketServerProtocol, path):
         await websocket.send(disconnect('出错'))
         await websocket.close(1001, "error")
         return
-    url = postdict.get('BCVURL', None)
+    url = postdict.get('BURL', None)
     if not url:
         await websocket.send(disconnect('出错'))
         await websocket.close(1001, "error")
-    cache = db.getCache(getCVid(url))   # 读缓存，判断是否能从缓存返回
+    cache = db.getCache(getCVid(url)[1])   # 读缓存，判断是否能从缓存返回
     if cache:                           # 从缓存返回
         lock.set()                      # 解除阻塞
         await websocket.send(response(status=True, imgs=cache, fromcache=True))
         await websocket.close()
         return
     status, msg = getcv.Get(url, websocket.request_headers, callback, get_event_loop()) # 提交任务到队列
-    fatherlog.debug('Status: %s, msg: %s' % (status, msg))
+    logger.debug('Status: %s, msg: %s' % (status, msg))
     if not status:                      # 提交失败（一般是被DOS或爬，导致队列已满）（或者代码出错:(）
         await (websocket.close(1001, "服务器限制") if msg == 'Full' else websocket.close(1001, "内部错误"))
         return
-    fatherlog.debug('WaitLock!')
+    logger.debug('WaitLock!')
     await lock.wait()                   # 阻塞，等待回调
-    fatherlog.debug('UnLock!')
+    logger.debug('UnLock!')
     await websocket.close()             # 信息在回调处发送，这里直接关闭链接

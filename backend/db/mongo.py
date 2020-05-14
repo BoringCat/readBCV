@@ -1,11 +1,11 @@
 from mongoengine import (connect, DynamicDocument,
-    DictField, IntField, DateTimeField, Q)
+    DictField, StringField, DateTimeField, Q)
 import logging
 from datetime import timedelta, datetime
 
 class tempdb():
     class cvcache(DynamicDocument):
-        cvid = IntField()
+        cvid = StringField()
         imglist = DictField()
         cachetime = DateTimeField()
 

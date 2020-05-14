@@ -53,7 +53,7 @@ def start_loop(loop:asyncio.BaseEventLoop):
     '启动asyncio循环'
     loop.run_forever()
 
-def readCV(webtext):
+def readCV(webtext, isBV = False):
     '''分析图片们
 
     **你不应该在外部调用它！**
@@ -62,6 +62,10 @@ def readCV(webtext):
       - webtext: 页面HTML文本
     '''
     bs = BeautifulSoup(webtext, features="html.parser")
+    if isBV:
+        haveHead = bs.find('meta', {'property': "og:image"})    # 获取封面
+        head_img = haveHead.attrs.get('content') if haveHead else None
+        return { 'header': head_img, 'contents': [] }
     haveHead = bs.find('meta', {'data-hid': "og:image"})    # 获取封面
     head_img = haveHead.attrs.get('content') if haveHead else None
     ulist = tuple(filter(                               # 过滤获取不到的（一般没有）
@@ -86,8 +90,13 @@ def getCVid(url):
 
     args:
       - url: CV的URL
+    
+    return:
+      - bool: 是否为BV
+      - id
     '''
-    return int(url.split('/')[-1][2:])
+    id = url.split('/')[-1]
+    return id.lower().startswith('bv'), id
 
 class GetCVAsync():
     '''异步获取CV图片类
@@ -148,8 +157,8 @@ class GetCVAsync():
                 self._log.debug('reqheader = %s' % str(reqheader))
                 res = self._session.get(url, headers = reqheader)
                 if res.status_code == 200:
-                    cvid = getCVid(url)
-                    asyncio.run_coroutine_threadsafe(callback(True, cvid, readCV(res.text)),loop)
+                    isbv, cvid = getCVid(url)
+                    asyncio.run_coroutine_threadsafe(callback(True, cvid, readCV(res.text, isbv)),loop)
                 else:
                     asyncio.run_coroutine_threadsafe(callback(False, None, res),loop)
             except Empty:

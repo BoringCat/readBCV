@@ -84,7 +84,7 @@ export default {
       lastwarn: {},
       decorators: {
         URL: [
-          "BCVURL",
+          "BURL",
           {
             rules: [
               {
@@ -94,7 +94,9 @@ export default {
                     callback();
                   } else if (/^cv\d+$/.test(value)) {
                     callback();
-                  } else if (/^\d+$/.test(value)) {
+                  } else if (/^https?:\/\/www.bilibili.com\/video\/[bB][Vv]\w+$/.test(value)) {
+                    callback();
+                  } else if (/^[bB][Vv]\w+$/.test(value)) {
                     callback();
                   } else {
                     callback(this.$t('message.inputErrorMsg'));
@@ -114,8 +116,8 @@ export default {
         if (!err) {
           let postval = {...values}
           this.loading = true;
-          if (/^\d+$/.test(values['BCVURL'])) postval['BCVURL'] = `https://www.bilibili.com/read/cv${values['BCVURL']}`
-          else if (/^cv\d+$/.test(values['BCVURL'])) postval['BCVURL'] = `https://www.bilibili.com/read/${values['BCVURL']}`
+          if (/^cv\d+$/.test(values['BURL'])) postval['BURL'] = `https://www.bilibili.com/read/${values['BURL']}`
+          else if (/^[bB][Vv]\w+$/.test(values['BURL'])) postval['BURL'] = `https://www.bilibili.com/video/cv${values['BURL']}`
           this.initWebSocket(postval);
         }
       });

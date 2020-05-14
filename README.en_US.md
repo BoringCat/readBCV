@@ -21,10 +21,17 @@ Avoid Bilibili return 421 when access too fast. Each access from server limit at
 The data for each article will keep a week  
 
 ## Change logs
-### 2020/05/05
+### 2020/05/14
+- Now can get video cover from Bilibili
+
+<details>
+ <summary>2020/05/05</summary>
+
   - It can deal with cover now
   - Support language "Simplified Chinese", "Traditional Chinese" and "English (United States)"
   - Support "Dark Mode"
+
+</details>
 
 <details>
  <summary>2020/05/04</summary>

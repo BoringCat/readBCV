@@ -16,7 +16,7 @@ const message = {
     result: "结果",
     cover: "封面: ",
     linkList: "批量链接：",
-    inputErrorMsg: '请输入B站的专栏地址，如: https://www.bilibili.com/read/cv0000000 或 cv0000000',
+    inputErrorMsg: '请输入B站的页面地址或ID，如: cv0000000 Or BVabcdef123',
     warning: '注意',
     loadImageIsOpen: '已开启加载图片功能，请留意流量消耗',
     loadFailed: '获取失败',

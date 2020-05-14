@@ -16,7 +16,7 @@ const message = {
     result: "結果",
     cover: "封麵: ",
     linkList: "批量鏈接：",
-    inputErrorMsg: '請輸入B站的專欄地址，如: https://www.bilibili.com/read/cv0000000 或 cv0000000',
+    inputErrorMsg: '請輸入B站的頁麵地址或ID，如: cv0000000 Or BVabcdef123',
     warning: '註意',
     loadImageIsOpen: '已開啓加載圖片功能，請留意流量消耗',
     loadFailed: '獲取失敗',
