@@ -4,7 +4,6 @@ import websockets
 from json import dumps, loads
 from config import envconfig
 from utils import getCVid
-from db import CacheDB as db
 
 fatherlog = createLogger('ReadBCV')
 getcv = GetCVAsync(fatherlog)
@@ -46,7 +45,7 @@ async def readbcv(websocket:websockets.server.WebSocketServerProtocol, path):
     if path != glo_path:
         await websocket.close(1001, "Path error")
         return
-    async def callback(status, cvid, msg):
+    async def callback(status, msg, fromcache = False):
         '''回调函数
 
         kwargs:
@@ -55,8 +54,7 @@ async def readbcv(websocket:websockets.server.WebSocketServerProtocol, path):
           - msg: 要返回的信息（包括错误信息）
         '''
         if status:                  # 如果分析正常
-            db.Cache(cvid, msg)     # 写入缓存
-            await websocket.send(response(status=True, imgs=msg))
+            await websocket.send(response(status=True, imgs=msg, fromcache=fromcache))
         else:                       # 分析失败
             if msg:                 # B站返回状态码
                 errmsg = '服务器返回%d' % msg.status_code
@@ -76,12 +74,6 @@ async def readbcv(websocket:websockets.server.WebSocketServerProtocol, path):
     if not url:
         await websocket.send(disconnect('出错'))
         await websocket.close(1001, "error")
-    cache = db.getCache(getCVid(url)[1])   # 读缓存，判断是否能从缓存返回
-    if cache:                           # 从缓存返回
-        lock.set()                      # 解除阻塞
-        await websocket.send(response(status=True, imgs=cache, fromcache=True))
-        await websocket.close()
-        return
     status, msg = getcv.Get(url, websocket.request_headers, callback, get_event_loop()) # 提交任务到队列
     logger.debug('Status: %s, msg: %s' % (status, msg))
     if not status:                      # 提交失败（一般是被DOS或爬，导致队列已满）（或者代码出错:(）

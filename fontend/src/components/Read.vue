@@ -30,7 +30,7 @@
       </a-form-item>
     </a-form>
     <hr />
-    <Row v-if="contents.length" class="result">
+    <Row class="result">
       <Col
         :xs="{span:22, offset:1}"
         :sm="{span:20, offset:2}"
@@ -47,7 +47,7 @@
           <a-collapse v-if="loadimg" v-model="activeKey">
             <a-collapse-panel v-for="{img, isheader, figcaption} in contents" :key="img" :header="(isheader?$t('message.cover'):'') + getName(img)">
               <div style="text-align: center;">
-                <a class="showimg" @click="downloadByBlob(img, getName(img))">
+                <a class="showimg" @click="downloadUseBlob(img, getName(img))">
                   <img :src="img" />
                 </a>
                 <div class="figcaption">{{ figcaption }}</div>
@@ -56,9 +56,9 @@
           </a-collapse>
           <div v-else v-for="{img, isheader} in contents" :key="img">
             <hr />
-            <a @click="downloadByBlob(img, getName(img))">{{ (isheader?$t('message.cover'):'') + getName(img) }}</a>
+            <a @click="downloadUseBlob(img, getName(img))">{{ (isheader?$t('message.cover'):'') + getName(img) }}</a>
           </div>
-          <div>
+          <div v-if="contents.length">
             <h3>{{ $t('message.linkList') }}</h3>
             <pre>{{ contents.map(e=>e.img).join('\n') }}</pre>
           </div>
@@ -169,7 +169,13 @@ export default {
     },
     websocketonmessage(e) {
       //数据接收
+      console.log(e)
       const redata = JSON.parse(e.data);
+      const status = redata.status || false;
+      if (! status) {
+        handleError(this.$t('message.loadFailed'), redata.errmsg || this.$t('message.failUnknownError'), 30);
+        return
+      }
       const fromcache = redata.fromcache || false;
       let have_header = false
       let header = redata.imgs.header;
@@ -203,7 +209,6 @@ export default {
             30
           );
         }, 100);
-      console.log(this.contents)
     },
     websocketsend(Data) {
       //数据发送
@@ -215,30 +220,17 @@ export default {
         handleError(this.$t('message.loadFailed'), e.reason || this.$t('message.failUnknownError'), 30);
       this.loading = false;
     },
-    downloadByBlob(url, name) {
-      let image = new Image();
-      image.setAttribute("crossOrigin", "anonymous");
-      image.src = url;
-      image.onload = () => {
-        let canvas = document.createElement("canvas");
-        canvas.width = image.width;
-        canvas.height = image.height;
-        let ctx = canvas.getContext("2d");
-        ctx.drawImage(image, 0, 0, image.width, image.height);
-        canvas.toBlob(blob => {
-          let url = URL.createObjectURL(blob);
-          this.download(url, name);
-          // 用完释放URL对象
+    downloadUseBlob(url, name) {
+      fetch(url).then(res=>{
+        res.blob().then(blob=>{
+          let eleLink = document.createElement("a");
+          eleLink.download = name;
+          eleLink.href = URL.createObjectURL(blob);
+          eleLink.click();
+          eleLink.remove();
           URL.revokeObjectURL(url);
-        });
-      };
-    },
-    download(href, name = "pic") {
-      let eleLink = document.createElement("a");
-      eleLink.download = name;
-      eleLink.href = href;
-      eleLink.click();
-      eleLink.remove();
+        })
+      })
     }
   }
 };
@@ -247,6 +239,9 @@ export default {
 <style>
 .form {
   margin-top: 8px;
+}
+.result .ant-spin-container {
+  min-height: 8rem;
 }
 .result img {
   max-width: 100%;
@@ -290,6 +285,9 @@ export default {
   }
   .result .ant-collapse-content {
     background-color: #2c2c2c;
+  }
+  .ant-spin-nested-loading > div > .ant-spin .ant-spin-text {
+    text-shadow: 0 1px 2px #111;
   }
 }
 </style>

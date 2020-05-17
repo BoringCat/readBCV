@@ -60,6 +60,7 @@ class tempdb():
         session = inSession if bool(inSession) else self.rawsession()
         query = session.query(self.cvcache).filter(self.cvcache.cvid == cvid)
         if not query.count():
+            session.close()
             return None
         if bool(inSession):
             return query.first()

@@ -22,8 +22,11 @@ The data for each article will keep a week
 
 ## Change logs
 ### 2020/05/17
-- Now can show same tag as Bilibili website
-- Add two button to show and hide pictures
+- (Add) Now can show same tag as Bilibili website.
+- (Add) Add two button to show and hide pictures.
+- (Fix) Fix a problem that may crash the database "can only be used in that same thread.".
+- (Fix) Fix a problem that make website hidden "Please Wait".
+- (Fix) Fix a problem that website will not show error message from server.
 
 <details>
  <summary>2020/05/14</summary>

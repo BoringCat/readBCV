@@ -2,6 +2,8 @@
 cd `dirname $0`
 
 _DOCKER_BASENAME='vue'
+U_ID=`id -u $USERNAME`
+G_ID=`id -g $USERNAME`
 
 case $1 in
     '-l')
@@ -27,7 +29,9 @@ create() {
     -v ${__DIRNAME__}:/app\
     -w /app/${__FRONTEND__}\
     -p $LISTEN:3000:3000\
-    -e HOST='0.0.0.0' -it boringcat/node_vue:lts-alpine -c "su $UID"
+    -e U_ID=$U_ID\
+    -e G_ID=$G_ID\
+    -e HOST='0.0.0.0' -it boringcat/node_vue:lts-alpine
 }
 
 start(){
@@ -37,8 +41,12 @@ start(){
     if [ $? -ne 0 ]; then
         create
     else
-        OLDLISTEN=$(docker container inspect vue_debug_fontend --format="{{json .HostConfig.PortBindings}}" | jq -r '.[][0].HostIp')
+        OLDLISTEN=$(docker container inspect ${_DOCKER_BASENAME}_debug_${__FRONTEND__} --format="{{json .HostConfig.PortBindings}}" | jq -r '.[][0].HostIp')
+        CHANGEID=$(docker container inspect ${_DOCKER_BASENAME}_debug_${__FRONTEND__} --format="{{json .Config.Env}}" | jq -r '.[]' | grep U_ID=$U_ID)
+        UPDATE=$(docker image inspect `docker container inspect vue_debug_frontend --format="{{ .Image }}" | cut -d: -f2` --format="{{json .RepoTags}}" | jq -r '.[]')
         [ "$OLDLISTEN" != "$LISTEN" ] && rm && create
+        [ -z "$CHANGEID" ] && rm && create
+        [ -z "$UPDATE" ] && rm && create
     fi
     docker start -ia ${_DOCKER_BASENAME}_debug_${__FRONTEND__}
 }

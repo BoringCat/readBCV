@@ -155,23 +155,30 @@ class GetCVAsync():
         kwargs:
           - interval: 每次分析的间隔（单位：秒）（默认：10）
         '''
+        from db import CacheDB
         while self._GoRUN:
             try:
                 (url, reqheader, callback, loop) = self._getqueue.get()
+                cache = CacheDB.getCache(getCVid(url)[1])   # 读缓存，判断是否能从缓存返回
+                if cache:
+                    asyncio.run_coroutine_threadsafe(callback(True, cache, True),loop)
+                    continue
                 self.filter_headers(reqheader)
                 self._log.debug('reqheader = %s' % str(reqheader))
                 res = self._session.get(url, headers = reqheader)
                 if res.status_code == 200:
                     isbv, cvid = getCVid(url)
-                    asyncio.run_coroutine_threadsafe(callback(True, cvid, readCV(res.text, isbv)),loop)
+                    imgs = readCV(res.text, isbv)
+                    CacheDB.Cache(cvid, imgs)     # 写入缓存
+                    asyncio.run_coroutine_threadsafe(callback(True, imgs),loop)
                 else:
-                    asyncio.run_coroutine_threadsafe(callback(False, None, res),loop)
+                    asyncio.run_coroutine_threadsafe(callback(False, res),loop)
+                await asyncio.sleep(interval)
             except Empty:
                 pass
             except Exception as err:
                 self._log.getChild('GetQueue').error("Type: %s, msg: %s" % (type(err),str(err)))
                 asyncio.run_coroutine_threadsafe(callback(False, None, None),loop)
-            finally:
                 await asyncio.sleep(interval)
 
     def Get(self, url, reqheader, callback, loop):
