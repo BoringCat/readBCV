@@ -23,6 +23,8 @@ const message = {\n\
     result: '',\n\
     cover: '',\n\
     linkList: '',\n\
+    collapseAll: '',\n\
+    showAll: '',\n\
     inputErrorMsg: '',\n\
     warning: '',\n\
     loadImageIsOpen: '',\n\

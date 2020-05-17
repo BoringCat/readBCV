@@ -16,6 +16,8 @@ const message = {
     result: "Result",
     cover: "This is Cover: ",
     linkList: "linkList",
+    collapseAll: "collapseAll",
+    showAll: "showAll",
     inputErrorMsg: "Please input Bilibili Object ID like cv0000000 Or BVabcdef123",
     warning: 'Warning',
     loadImageIsOpen: 'Will load image now. Please care about network traffic limit',

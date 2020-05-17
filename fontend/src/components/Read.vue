@@ -40,13 +40,17 @@
         :xxl="{span: 8, offset: 8}"
       >
         <Spin :spinning="loading" :delay="500" :tip="$t('message.speedLimit')">
-          <h2>{{ $t('message.result') }}</h2>
+          <h2>{{ $t('message.result') }}
+            <a-button v-if="loadimg && this.activeKey.length !== 0" type="dashed" class="showall" @click="activeKey = []">{{ $t('message.collapseAll') }}</a-button>
+            <a-button v-if="loadimg && this.activeKey.length !== this.allkeys.length" type="dashed" class="showall" @click="activeKey = [...allkeys]">{{ $t('message.showAll') }}</a-button>
+          </h2>
           <a-collapse v-if="loadimg" v-model="activeKey">
-            <a-collapse-panel v-for="{img, isheader} in contents" :key="img" :header="(isheader?$t('message.cover'):'') + getName(img)">
+            <a-collapse-panel v-for="{img, isheader, figcaption} in contents" :key="img" :header="(isheader?$t('message.cover'):'') + getName(img)">
               <div style="text-align: center;">
-                <a @click="downloadByBlob(img, getName(img))">
+                <a class="showimg" @click="downloadByBlob(img, getName(img))">
                   <img :src="img" />
                 </a>
+                <div class="figcaption">{{ figcaption }}</div>
               </div>
             </a-collapse-panel>
           </a-collapse>
@@ -80,7 +84,9 @@ export default {
       activeKey: [],
       loading: false,
       loadimg: false,
+      showall: false,
       contents: [],
+      allkeys: [],
       lastwarn: {},
       decorators: {
         URL: [
@@ -169,9 +175,16 @@ export default {
       let header = redata.imgs.header;
       this.loading = false;
       this.contents = redata.imgs.contents.map(e=>{
-        let isheader = this.getName(e) === this.getName(header)
+        let imgurl, figcaption
+        if (typeof(e) === 'object'){
+          imgurl = e.url
+          figcaption = e.figcaption
+        } else {
+          imgurl = e
+        }
+        let isheader = this.getName(imgurl) === this.getName(header)
         if (! have_header) if (isheader) have_header = true
-        return {img: 'https:'+e, isheader}
+        return {img: 'https:'+imgurl, isheader, figcaption}
       });
       if (! have_header) this.contents.unshift({img: header, isheader: true})
       if (fromcache) handleSuccess(
@@ -180,6 +193,7 @@ export default {
           10
         );
       else handleSuccess(this.$t('message.loadSuccess'), this.$t('message.loadFromWeb'), 10);
+      this.allkeys = this.contents.map(e=>(e.img))
       if (this.loadimg)
         setTimeout(() => {
           if (this.lastwarn) closeOne(this.lastwarn);
@@ -189,6 +203,7 @@ export default {
             30
           );
         }, 100);
+      console.log(this.contents)
     },
     websocketsend(Data) {
       //数据发送
@@ -249,9 +264,22 @@ export default {
 .warn p:first-child {
   margin: 0;
 }
+
+.figcaption {
+  color: #111;
+}
+
+.showall {
+  float: right;
+  margin: 0 3px;
+}
+.showall, .showall:hover, .showall:focus {
+  background-color: transparent;
+}
+
 @media (prefers-color-scheme: dark) {
   .warn, .form .ant-form-item-required, .form .ant-checkbox-wrapper, .form .ant-input, .result h2, .result h3,
-  .result .ant-collapse > .ant-collapse-item > .ant-collapse-header {
+  .result .ant-collapse > .ant-collapse-item > .ant-collapse-header, .figcaption, .showall {
     color: #EEE;
   }
   .result pre {

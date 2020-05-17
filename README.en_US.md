@@ -21,8 +21,16 @@ Avoid Bilibili return 421 when access too fast. Each access from server limit at
 The data for each article will keep a week  
 
 ## Change logs
-### 2020/05/14
-- Now can get video cover from Bilibili
+### 2020/05/17
+- Now can show same tag as Bilibili website
+- Add two button to show and hide pictures
+
+<details>
+ <summary>2020/05/14</summary>
+
+  - Now can get video cover from Bilibili
+
+</details>
 
 <details>
  <summary>2020/05/05</summary>

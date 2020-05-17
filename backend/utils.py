@@ -68,19 +68,24 @@ def readCV(webtext, isBV = False):
         return { 'header': head_img, 'contents': [] }
     haveHead = bs.find('meta', {'data-hid': "og:image"})    # 获取封面
     head_img = haveHead.attrs.get('content') if haveHead else None
-    ulist = tuple(filter(                               # 过滤获取不到的（一般没有）
-        lambda x:bool(x),
-        map(                                            # 获取data-src
-            lambda x:x.attrs.get('data-src'),
-            filter(                                     # 过滤分割图片（`cut-off-\d+`）
-                lambda x:'cut-off' not in ('\n'.join(x.attrs.get('class',[]))),
-                bs.find('div','article-holder').find_all('img')
-            )
-        )
+    imgs = list(filter(                                     # 过滤分割图片（`cut-off-\d+`）
+        lambda x:'cut-off' not in ('\n'.join(x.attrs.get('class',[]))),
+        bs.find('div','article-holder').find_all('img')
     ))
+    ulist = []
+    for img in imgs:
+        data_src = img.attrs.get('data-src')
+        if not data_src:
+            continue
+        raw_src = '@'.join(data_src.split('@')[:-1]) if '@' in data_src else data_src
+        figcaptions = img.parent('figcaption')
+        if figcaptions:
+            ulist.append({'url': raw_src, 'figcaption': '\n'.join(map(lambda x:x.text,figcaptions))})
+        else:
+            ulist.append({'url': raw_src})
     return { 
         'header': head_img,
-        'contents': ['@'.join(u.split('@')[:-1]) if '@' in u else u for u in ulist] 
+        'contents': ulist
     }
 
 def getCVid(url):
