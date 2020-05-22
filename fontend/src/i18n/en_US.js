@@ -18,6 +18,7 @@ const message = {
     linkList: "linkList",
     collapseAll: "collapseAll",
     showAll: "showAll",
+    metalink_dl: "Download with MetaLink",
     inputErrorMsg: "Please input Bilibili Object ID like cv0000000 Or BVabcdef123",
     warning: 'Warning',
     loadImageIsOpen: 'Will load image now. Please care about network traffic limit',

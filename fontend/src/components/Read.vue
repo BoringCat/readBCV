@@ -15,6 +15,7 @@
         <p><s>{{ $t("message.warninfo.l2") }}</s></p>
         <p>{{ $t("message.warninfo.l3") }}</p>
         <p>{{ $t("message.warninfo.l4") }}</p>
+        <p><a href="https://github.com/BoringCat/readBCV/blob/master/MetaFileHelp.md" target="_blank">MetaFile Help</a></p>
       </a-form-item>
       <a-form-item :label="$t('message.inputTitle')">
         <a-input v-decorator="decorators['URL']" />
@@ -44,7 +45,7 @@
             <a-button v-if="loadimg && this.activeKey.length !== 0" type="dashed" class="showall" @click="activeKey = []">{{ $t('message.collapseAll') }}</a-button>
             <a-button v-if="loadimg && this.activeKey.length !== this.allkeys.length" type="dashed" class="showall" @click="activeKey = [...allkeys]">{{ $t('message.showAll') }}</a-button>
           </h2>
-          <a-collapse v-if="loadimg" v-model="activeKey">
+          <a-collapse v-if="loadimg && this.contents.length !== 0" v-model="activeKey">
             <a-collapse-panel v-for="{img, isheader, figcaption} in contents" :key="img" :header="(isheader?$t('message.cover'):'') + getName(img)">
               <div style="text-align: center;">
                 <a class="showimg" @click="downloadUseBlob(img, getName(img))">
@@ -59,7 +60,10 @@
             <a @click="downloadUseBlob(img, getName(img))">{{ (isheader?$t('message.cover'):'') + getName(img) }}</a>
           </div>
           <div v-if="contents.length">
-            <h3>{{ $t('message.linkList') }}</h3>
+            <h3>
+              {{ $t('message.linkList') }}
+              <a-button type="primary" class="metalink" @click="TryMeta">{{ $t('message.metalink_dl') }}</a-button>
+            </h3>
             <pre>{{ contents.map(e=>e.img).join('\n') }}</pre>
           </div>
         </Spin>
@@ -69,7 +73,7 @@
 </template>
 
 <script>
-import { handleError, handleSuccess, handleWarning, closeOne } from "@/utils";
+import { handleError, handleSuccess, handleWarning, closeOne, genMetalink, getName } from "@/utils";
 import { Row, Col } from "ant-design-vue";
 import { switchLocale } from '@/i18n';
 export default {
@@ -79,12 +83,14 @@ export default {
   },
   data() {
     return {
+      getName,
       formLayout: "horizontal",
       form: this.$form.createForm(this, { name: "readbcv" }),
       activeKey: [],
       loading: false,
       loadimg: false,
       showall: false,
+      bid: '',
       contents: [],
       allkeys: [],
       lastwarn: {},
@@ -116,11 +122,17 @@ export default {
     };
   },
   methods: {
+    TryMeta() {
+      let MetaFile = genMetalink(this.contents.map(e=>e.img),this.bid)
+      let b64 = btoa(MetaFile)
+      this.downloadFile(`data:text/plain;charset=utf-8;base64,${b64}`, `${this.bid}.metalink`)
+    },
     handleSubmit(e) {
       e.preventDefault();
       this.form.validateFields((err, values) => {
         if (!err) {
           let postval = {...values}
+          this.bid = getName(values['BURL'])
           this.loading = true;
           if (/^cv\d+$/.test(values['BURL'])) postval['BURL'] = `https://www.bilibili.com/read/${values['BURL']}`
           else if (/^[bB][Vv]\w+$/.test(values['BURL'])) postval['BURL'] = `https://www.bilibili.com/video/cv${values['BURL']}`
@@ -141,10 +153,6 @@ export default {
           30
         );
       }
-    },
-    getName(url) {
-      let l = url.split("/");
-      return l[l.length - 1];
     },
     initWebSocket(values) {
       //初始化weosocket
@@ -169,7 +177,6 @@ export default {
     },
     websocketonmessage(e) {
       //数据接收
-      console.log(e)
       const redata = JSON.parse(e.data);
       const status = redata.status || false;
       if (! status) {
@@ -223,14 +230,17 @@ export default {
     downloadUseBlob(url, name) {
       fetch(url).then(res=>{
         res.blob().then(blob=>{
-          let eleLink = document.createElement("a");
-          eleLink.download = name;
-          eleLink.href = URL.createObjectURL(blob);
-          eleLink.click();
-          eleLink.remove();
+          this.downloadFile(URL.createObjectURL(blob), name)
           URL.revokeObjectURL(url);
         })
       })
+    },
+    downloadFile(href, name) {
+      let eleLink = document.createElement("a");
+      eleLink.download = name;
+      eleLink.href = href;
+      eleLink.click();
+      eleLink.remove();
     }
   }
 };
@@ -268,6 +278,17 @@ export default {
   float: right;
   margin: 0 3px;
 }
+
+h3 {
+  margin: 0.25em 0;
+  min-height: 32px;
+  line-height: 32px;
+}
+
+button.metalink {
+  float: right;
+}
+
 .showall, .showall:hover, .showall:focus {
   background-color: transparent;
 }

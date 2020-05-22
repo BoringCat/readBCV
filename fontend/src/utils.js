@@ -132,4 +132,38 @@ const handleWarning = (title, msg, duration = 3) => {
   return _showNotifi('warning', title, msg, duration)
 }
 
-export { handleAxiosError, handleError, handleSuccess, handleInfo ,handleWarning, closeOne }
+const getProtocol = url => {
+  try {
+    return /^(https?):\/\//.exec(url)[1]
+  } catch (error) {
+    
+  }
+}
+
+const getName = url => {
+  let l = url.split("/");
+  return l[l.length - 1];
+}
+
+const MetaLinkObj = {
+  header: '<?xml version="1.0" encoding="utf-8"?>\n<metalink version="3.0" xmlns="http://www.metalinker.org/" type="dynamic" pubdate="Fri, 22 May 2020 12:04:55 GMT" generator="readbcv" xmlns:mm0="https://readbcv.boringcat.top/">\n <files>\n',
+  footer: ' </files>\n</metalink>',
+  format: '  <file name="{folder}/{name}">\n   <mm0:timestamp>{now}</mm0:timestamp>\n   <resources maxconnections="1">\n    <url protocol="{protocol}" type="{protocol}" preference="100">{url}</url>\n   </resources>\n  </file>\n',
+  formater (folder, url) {
+    return this.format.replace(/{folder}/g, folder)
+                      .replace(/{name}/g,getName(url))
+                      .replace(/{protocol}/g,getProtocol(url))
+                      .replace(/{now}/g,parseInt(new Date().getTime() / 1000))
+                      .replace(/{url}/g,url)
+  }
+}
+
+const genMetalink = (urls, folder) => {
+  let ms = MetaLinkObj.header
+  urls.forEach(url => {
+    ms = ms + MetaLinkObj.formater(folder, url)
+  })
+  return ms + MetaLinkObj.footer
+}
+
+export { handleAxiosError, handleError, handleSuccess, handleInfo ,handleWarning, closeOne, genMetalink, getName }

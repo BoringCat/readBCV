@@ -18,6 +18,7 @@ const message = {
     linkList: "批量鏈接：",
     collapseAll: "收起所有",
     showAll: "展開所有",
+    metalink_dl: "使用MetaLink下載",
     inputErrorMsg: '請輸入B站的頁麵地址或ID，如: cv0000000 Or BVabcdef123',
     warning: '註意',
     loadImageIsOpen: '已開啓加載圖片功能，請留意流量消耗',
