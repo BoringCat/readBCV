@@ -22,6 +22,7 @@ class tempdb(_Base):
         self._engine = create_engine(
             'mysql+pymysql://%s:%s@%s:%s/%s' % (self._user, self._password, self._host, self._port, self._database),
             pool_size=self._pool_size,
+            pool_recycle=900,
             pool_pre_ping=True
         )
         return sessionmaker(bind = self._engine)

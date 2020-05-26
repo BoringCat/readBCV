@@ -13,6 +13,7 @@ class tempdb(_Base):
         self._log.getChild('_connect_db').debug('sqlite://')
         self._engine = create_engine('sqlite://',
             pool_size=self._pool_size,
+            pool_recycle=900,
             pool_pre_ping=True
         )
         return sessionmaker(bind = self._engine)
