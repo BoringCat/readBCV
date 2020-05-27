@@ -124,8 +124,10 @@ export default {
   methods: {
     TryMeta() {
       let MetaFile = genMetalink(this.contents.map(e=>e.img),this.bid)
-      let b64 = btoa(MetaFile)
-      this.downloadFile(`data:text/plain;charset=utf-8;base64,${b64}`, `${this.bid}.metalink`)
+      let blob = new Blob([MetaFile], {type: 'application/octet-stream'});
+      let durl = URL.createObjectURL(blob)
+      this.downloadFile(durl, `${this.bid}.metalink`)
+      URL.revokeObjectURL(durl);
     },
     handleSubmit(e) {
       e.preventDefault();
@@ -230,8 +232,9 @@ export default {
     downloadUseBlob(url, name) {
       fetch(url).then(res=>{
         res.blob().then(blob=>{
-          this.downloadFile(URL.createObjectURL(blob), name)
-          URL.revokeObjectURL(url);
+          let durl = URL.createObjectURL(blob)
+          this.downloadFile(durl, name)
+          URL.revokeObjectURL(durl);
         })
       })
     },

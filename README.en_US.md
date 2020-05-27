@@ -21,12 +21,20 @@ Avoid Bilibili return 421 when access too fast. Each access from server limit at
 The data for each article will keep a week  
 
 ## Change logs
-### 2020/05/17
+### 2020/05/27
+- Fix a database pool problem with will make backend get data from bilibili multiple times.
+- Optimize the logic for MetaFile generated
+
+<details>
+ <summary>2020/05/17</summary>
+
 - (Add) Now can show same tag as Bilibili website.
 - (Add) Add two button to show and hide pictures.
 - (Fix) Fix a problem that may crash the database "can only be used in that same thread.".
 - (Fix) Fix a problem that make website hidden "Please Wait".
 - (Fix) Fix a problem that website will not show error message from server.
+
+</details>
 
 <details>
  <summary>2020/05/14</summary>
