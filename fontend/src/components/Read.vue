@@ -58,7 +58,7 @@
           <div v-else v-for="{img, isheader, figcaption, title} in contents" :key="img">
             <hr />
             <a @click="downloadUseBlob(img, getName(img))">{{ (isheader?$t('message.cover'):'') + (title?title + ': ': '') + getName(img) }}</a>
-            <div class="figcaption">{{ figcaption }}</div>
+            <pre class="figcaption">{{ figcaption }}</pre>
           </div>
           <div v-if="contents.length">
             <h3>
@@ -210,6 +210,7 @@ export default {
           10
         );
       else handleSuccess(this.$t('message.loadSuccess'), this.$t('message.loadFromWeb'), 10);
+      this.activeKey = [];
       this.allkeys = this.contents.map(e=>(e.img))
       if (this.loadimg)
         setTimeout(() => {
@@ -277,6 +278,9 @@ export default {
 
 .figcaption {
   color: #111;
+  white-space: pre-wrap;
+  overflow: visible;
+  text-align: center;
 }
 
 .showall {

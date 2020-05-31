@@ -71,6 +71,11 @@ def getCVid(url):
     id = url.split('/')[-1]
     return id.lower().startswith('bv'), id
 
+def br2Newline(obj):
+    for br in obj.find_all('br'):
+        br.replace_with('\n')
+    return obj
+
 class GetCVAsync():
     '''异步获取CV图片类
     kwargs:
@@ -183,7 +188,7 @@ class GetCVAsync():
             raw_src = self._url_filter(baseurl, '@'.join(data_src.split('@')[:-1]) if '@' in data_src else data_src)
             figcaptions = img.parent('figcaption')
             if figcaptions:
-                ulist.append({'url': raw_src, 'figcaption': '\n'.join(map(lambda x:x.text,figcaptions))})
+                ulist.append({'url': raw_src, 'figcaption': '\n'.join(map(lambda x:x.text, map(br2Newline, figcaptions)))})
             else:
                 ulist.append({'url': raw_src})
         return {
