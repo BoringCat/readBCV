@@ -25,6 +25,7 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 - (Fix) 修复当专栏中插入视频时返回辣个图片的问题
 - (Fix) 修复图片自带https前缀时获取失败的问题，现在可以匹配任意链接的图片了
 - (Add) 现在可以匹配专栏中插入视频的封面了
+- (Fix) 强制后端返回https链接，以应对https下无法`fetch` http图片的问题
 
 <details>
  <summary>2020/05/27</summary>

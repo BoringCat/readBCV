@@ -25,6 +25,7 @@ The data for each article will keep a week
 - (Fix) Fix a problem that will return video card image when a video inserted in article
 - (Fix) Fix a problem cause the frontend generate a bad url when image's "data-src" already have "https"链接的图片了
 - (Add) Now we can get the video's cover with had inserted in article
+- (Fix) Force backend to return https url. Because browser cannot `fetch` http url under https website
 
 <details>
  <summary>2020/05/27</summary>

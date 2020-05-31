@@ -116,6 +116,17 @@ class GetCVAsync():
                 headers.pop(k, None)
 
     def _url_filter(self, baseurl, url):
+        '''分析URL
+
+        **你不应该在外部调用它！**
+
+        args:
+        - baseurl: 当前页面的URL
+        - url: data-src的URL
+
+        return:
+        - url: 完整链接
+        '''
         if not url.startswith('http'):
             if url.startswith('//'):
                 return 'https:' + url
@@ -123,7 +134,7 @@ class GetCVAsync():
                 return 'https://www.bilibili.com' + url
             else:
                 return baseurl + url
-        return url
+        return ('https:%s' % url[5:]) if url[:5] == 'http:' else url
 
     def readCV(self, baseurl, webtext, isBV = False, userAgents = None, locale = 'zh_CN'):
         '''分析图片们
@@ -181,28 +192,43 @@ class GetCVAsync():
         }
 
     def _readBV(self, webtext, id = None, isav = False):
-        '''分析图片们
+        '''分析视频封面和标题
 
         **你不应该在外部调用它！**
 
         args:
         - webtext: 页面HTML文本
+        - id: 视频ID
+        - isav: 是否为AV
+
+        return:
+        - head_imd: 视频封面
+        - title: 视频标题
         '''
         bs = BeautifulSoup(webtext, features="html.parser")
         haveHead = bs.find('meta', {'property': "og:image"})    # 获取封面
         title = bs.find('h1', {'class': "video-title"}).attrs.get('title')
         if isav and id:
             title = self._getBV_from_av(id, bs) + ': ' + title
-        head_img = haveHead.attrs.get('content') if haveHead else None
+        head_img = self._url_filter("https://www.bilibili.com/video/%s" % (id or ''), haveHead.attrs.get('content')) if haveHead else None
         return head_img, title
 
     def _getBV_from_av(self, aid, bs:BeautifulSoup):
+        '''从AV号中获取BV号
+
+        **你不应该在外部调用它！**
+
+        args:
+        - aid: AV号
+        - bs: 分析AV用的BeautifulSoup
+
+        return:
+        - bvid: BV号
+        '''
         scriptlist = list(filter(lambda x: aid in (x.string or ''), bs.find_all('script') ))
         for script in scriptlist:
             trysearch = re.search(r'__INITIAL_STATE__[ ]?=[ ]?(?P<j>[\S \n]+)}[ ]*;', script.string)
-            self._log.getChild('_getBV_from_av').debug('trysearch: %s' % type(trysearch))
             if trysearch:
-                self._log.getChild('_getBV_from_av').debug('trysearch: %s' % trysearch.groupdict())
                 jsonstr = trysearch.groupdict()['j'] + '}'
                 j = json.loads(jsonstr)
                 bvid = j.get('videoData',{}).get('bvid',None)
@@ -210,6 +236,18 @@ class GetCVAsync():
                     return bvid
 
     def av_in_cv(self, aid, userAgents):
+        '''分析CV中的AV
+
+        **你不应该在外部调用它！**
+
+        args:
+        - aid: AV号
+        - userAgents: 请求时的用户头部
+
+        return:
+        - head_imd: 视频封面
+        - title: 视频标题
+        '''
         res = self._session.get('https://www.bilibili.com/video/av%s' % aid, headers=userAgents)
         if res.status_code == 200:
             return self._readBV(res.text, aid, True)
@@ -217,6 +255,18 @@ class GetCVAsync():
             return None, None
 
     def bv_in_cv(self, bvid, userAgents):
+        '''分析CV中的BV
+
+        **你不应该在外部调用它！**
+
+        args:
+        - bvid: BV号
+        - userAgents: 请求时的用户头部
+
+        return:
+        - head_imd: 视频封面
+        - title: 视频标题
+        '''
         res = self._session.get('https://www.bilibili.com/video/BV%s' % bvid, headers=userAgents)
         if res.status_code == 200:
             return self._readBV(res.text)
