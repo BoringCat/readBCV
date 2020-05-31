@@ -46,7 +46,7 @@
             <a-button v-if="loadimg && this.activeKey.length !== this.allkeys.length" type="dashed" class="showall" @click="activeKey = [...allkeys]">{{ $t('message.showAll') }}</a-button>
           </h2>
           <a-collapse v-if="loadimg && this.contents.length !== 0" v-model="activeKey">
-            <a-collapse-panel v-for="{img, isheader, figcaption} in contents" :key="img" :header="(isheader?$t('message.cover'):'') + getName(img)">
+            <a-collapse-panel v-for="{img, isheader, figcaption, title} in contents" :key="img" :header="(isheader?$t('message.cover'):'') + (title?title + ': ': '') + getName(img)">
               <div style="text-align: center;">
                 <a class="showimg" @click="downloadUseBlob(img, getName(img))">
                   <img :src="img" />
@@ -55,9 +55,10 @@
               </div>
             </a-collapse-panel>
           </a-collapse>
-          <div v-else v-for="{img, isheader} in contents" :key="img">
+          <div v-else v-for="{img, isheader, figcaption, title} in contents" :key="img">
             <hr />
-            <a @click="downloadUseBlob(img, getName(img))">{{ (isheader?$t('message.cover'):'') + getName(img) }}</a>
+            <a @click="downloadUseBlob(img, getName(img))">{{ (isheader?$t('message.cover'):'') + (title?title + ': ': '') + getName(img) }}</a>
+            <div class="figcaption">{{ figcaption }}</div>
           </div>
           <div v-if="contents.length">
             <h3>
@@ -133,7 +134,7 @@ export default {
       e.preventDefault();
       this.form.validateFields((err, values) => {
         if (!err) {
-          let postval = {...values}
+          let postval = {...values, locale: this.$i18n.locale}
           this.bid = getName(values['BURL'])
           this.loading = true;
           if (/^cv\d+$/.test(values['BURL'])) postval['BURL'] = `https://www.bilibili.com/read/${values['BURL']}`
@@ -190,16 +191,17 @@ export default {
       let header = redata.imgs.header;
       this.loading = false;
       this.contents = redata.imgs.contents.map(e=>{
-        let imgurl, figcaption
+        let imgurl, figcaption, title
         if (typeof(e) === 'object'){
           imgurl = e.url
           figcaption = e.figcaption
+          title = e.title
         } else {
           imgurl = e
         }
         let isheader = this.getName(imgurl) === this.getName(header)
         if (! have_header) if (isheader) have_header = true
-        return {img: 'https:'+imgurl, isheader, figcaption}
+        return {img: imgurl, isheader, figcaption, title}
       });
       if (! have_header) this.contents.unshift({img: header, isheader: true})
       if (fromcache) handleSuccess(

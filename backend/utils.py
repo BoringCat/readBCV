@@ -6,6 +6,9 @@ from threading import Thread
 from queue import Queue, Empty, Full
 from config import envconfig
 from requests import session
+from i18n import t
+import re
+import json
 
 _isinit = False
 
@@ -52,41 +55,6 @@ def setLogLevel(name, level):
 def start_loop(loop:asyncio.BaseEventLoop):
     '启动asyncio循环'
     loop.run_forever()
-
-def readCV(webtext, isBV = False):
-    '''分析图片们
-
-    **你不应该在外部调用它！**
-
-    args:
-      - webtext: 页面HTML文本
-    '''
-    bs = BeautifulSoup(webtext, features="html.parser")
-    if isBV:
-        haveHead = bs.find('meta', {'property': "og:image"})    # 获取封面
-        head_img = haveHead.attrs.get('content') if haveHead else None
-        return { 'header': head_img, 'contents': [] }
-    haveHead = bs.find('meta', {'data-hid': "og:image"})    # 获取封面
-    head_img = haveHead.attrs.get('content') if haveHead else None
-    imgs = list(filter(                                     # 过滤分割图片（`cut-off-\d+`）
-        lambda x:'cut-off' not in ('\n'.join(x.attrs.get('class',[]))),
-        bs.find('div','article-holder').find_all('img')
-    ))
-    ulist = []
-    for img in imgs:
-        data_src = img.attrs.get('data-src')
-        if not data_src:
-            continue
-        raw_src = '@'.join(data_src.split('@')[:-1]) if '@' in data_src else data_src
-        figcaptions = img.parent('figcaption')
-        if figcaptions:
-            ulist.append({'url': raw_src, 'figcaption': '\n'.join(map(lambda x:x.text,figcaptions))})
-        else:
-            ulist.append({'url': raw_src})
-    return { 
-        'header': head_img,
-        'contents': ulist
-    }
 
 def getCVid(url):
     '''获取CV的ID
@@ -147,6 +115,114 @@ class GetCVAsync():
             if 'websocket' in k.lower():
                 headers.pop(k, None)
 
+    def _url_filter(self, baseurl, url):
+        if not url.startswith('http'):
+            if url.startswith('//'):
+                return 'https:' + url
+            elif url.startswith('/'):
+                return 'https://www.bilibili.com' + url
+            else:
+                return baseurl + url
+        return url
+
+    def readCV(self, baseurl, webtext, isBV = False, userAgents = None, locale = 'zh_CN'):
+        '''分析图片们
+
+        **你不应该在外部调用它！**
+
+        args:
+        - webtext: 页面HTML文本
+        '''
+        bs = BeautifulSoup(webtext, features="html.parser")
+        if isBV:
+            head_img, title = self._readBV(webtext)
+            haveHead = bs.find('meta', {'property': "og:image"})    # 获取封面
+            head_img = haveHead.attrs.get('content') if haveHead else None
+            return { 'contents': [{ 'url': head_img, 'title': t('cover', locale), 'figcaption': title }], 'header': {} }
+        haveHead = bs.find('meta', {'data-hid': "og:image"})    # 获取封面
+        head_img = self._url_filter(baseurl, haveHead.attrs.get('content')) if haveHead else None
+        imgs = list(filter(                                     # 过滤分割图片（`cut-off-\d+`）
+            lambda x:'cut-off' not in ('\n'.join(x.attrs.get('class',[]))),
+            bs.find('div','article-holder').find_all('img')
+        ))
+        ulist = []
+        for img in imgs:
+            data_src = img.attrs.get('data-src')
+            if not data_src:
+                continue
+            # 如果是视频链接
+            if 'video-card' in img.attrs.get('class', []):
+                self._log.getChild('readCV').getChild('video-card').debug('is video-card')
+                aids = img.attrs.get('aid')              # 目前是用aid，也就是av号（2020/05/30）
+                if aids:
+                    for aid in aids.split(','):
+                        acimg, atitle = self.av_in_cv(aid, userAgents)
+                        if acimg:
+                            # 返回视频封面， 视频标题， 标签
+                            ulist.append({'url': acimg, 'figcaption': atitle, 'title': t('video_cover', locale)})
+                bids = img.attrs.get('bvid')              # 如果用改成BV号，可能需要修改代码
+                if bids:
+                    for bid in bids.split(','):
+                        bcimg, btitle = self.bv_in_cv(bid, userAgents)
+                        if bcimg:
+                            # 返回视频封面， 视频标题， 标签
+                            ulist.append({'url': bcimg, 'figcaption': btitle, 'title': t('video_cover', locale)})
+                continue
+            # 获取图片原图
+            raw_src = self._url_filter(baseurl, '@'.join(data_src.split('@')[:-1]) if '@' in data_src else data_src)
+            figcaptions = img.parent('figcaption')
+            if figcaptions:
+                ulist.append({'url': raw_src, 'figcaption': '\n'.join(map(lambda x:x.text,figcaptions))})
+            else:
+                ulist.append({'url': raw_src})
+        return {
+            'header': head_img,
+            'contents': ulist
+        }
+
+    def _readBV(self, webtext, id = None, isav = False):
+        '''分析图片们
+
+        **你不应该在外部调用它！**
+
+        args:
+        - webtext: 页面HTML文本
+        '''
+        bs = BeautifulSoup(webtext, features="html.parser")
+        haveHead = bs.find('meta', {'property': "og:image"})    # 获取封面
+        title = bs.find('h1', {'class': "video-title"}).attrs.get('title')
+        if isav and id:
+            title = self._getBV_from_av(id, bs) + ': ' + title
+        head_img = haveHead.attrs.get('content') if haveHead else None
+        return head_img, title
+
+    def _getBV_from_av(self, aid, bs:BeautifulSoup):
+        scriptlist = list(filter(lambda x: aid in (x.string or ''), bs.find_all('script') ))
+        for script in scriptlist:
+            trysearch = re.search(r'__INITIAL_STATE__[ ]?=[ ]?(?P<j>[\S \n]+)}[ ]*;', script.string)
+            self._log.getChild('_getBV_from_av').debug('trysearch: %s' % type(trysearch))
+            if trysearch:
+                self._log.getChild('_getBV_from_av').debug('trysearch: %s' % trysearch.groupdict())
+                jsonstr = trysearch.groupdict()['j'] + '}'
+                j = json.loads(jsonstr)
+                bvid = j.get('videoData',{}).get('bvid',None)
+                if bvid:
+                    return bvid
+
+    def av_in_cv(self, aid, userAgents):
+        res = self._session.get('https://www.bilibili.com/video/av%s' % aid, headers=userAgents)
+        if res.status_code == 200:
+            return self._readBV(res.text, aid, True)
+        else:
+            return None, None
+
+    def bv_in_cv(self, bvid, userAgents):
+        res = self._session.get('https://www.bilibili.com/video/BV%s' % bvid, headers=userAgents)
+        if res.status_code == 200:
+            return self._readBV(res.text)
+        else:
+            return None, None
+
     async def GetQueue(self, interval = 10):
         '''获取CV图片列表队列
 
@@ -158,7 +234,7 @@ class GetCVAsync():
         from db import CacheDB
         while self._GoRUN:
             try:
-                (url, reqheader, callback, loop) = self._getqueue.get()
+                (url, reqheader, locale, callback, loop) = self._getqueue.get()
                 cache = CacheDB.getCache(getCVid(url)[1])   # 读缓存，判断是否能从缓存返回
                 if cache:
                     asyncio.run_coroutine_threadsafe(callback(True, cache, True),loop)
@@ -168,7 +244,7 @@ class GetCVAsync():
                 res = self._session.get(url, headers = reqheader)
                 if res.status_code == 200:
                     isbv, cvid = getCVid(url)
-                    imgs = readCV(res.text, isbv)
+                    imgs = self.readCV(url, res.text, isbv, reqheader, locale)
                     CacheDB.Cache(cvid, imgs)     # 写入缓存
                     asyncio.run_coroutine_threadsafe(callback(True, imgs),loop)
                 else:
@@ -181,7 +257,7 @@ class GetCVAsync():
                 asyncio.run_coroutine_threadsafe(callback(False, None, None),loop)
                 await asyncio.sleep(interval)
 
-    def Get(self, url, reqheader, callback, loop):
+    def Get(self, url, reqheader, locale, callback, loop):
         '''异步获取CV图片列表
         kwargs:
           - url: CV的URL
@@ -193,7 +269,7 @@ class GetCVAsync():
           (status:bool, errmsg:str)
         '''
         try:
-            self._getqueue.put((url, reqheader, callback, loop))
+            self._getqueue.put((url, reqheader, locale, callback, loop))
         except Full:
             return False, 'Full'
         except:
