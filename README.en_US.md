@@ -21,12 +21,19 @@ Avoid Bilibili return 421 when access too fast. Each access from server limit at
 The data for each article will keep a week  
 
 ## Change logs
-### 2020/05/31
+### 2020/06/06
+- (Fix) Now return human readable error message when page not found.
+
+<details>
+ <summary>2020/05/31</summary>
+
 - (Fix) Fix a problem that will return video card image when a video inserted in article
 - (Fix) Fix a problem cause the frontend generate a bad url when image's "data-src" already have "https"链接的图片了
 - (Add) Now we can get the video's cover with had inserted in article
 - (Fix) Force backend to return https url. Because browser cannot `fetch` http url under https website
 - (Fix) Now the figcaption support `<br>`
+
+</details>
 
 <details>
  <summary>2020/05/27</summary>

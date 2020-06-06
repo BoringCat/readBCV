@@ -58,7 +58,7 @@ async def readbcv(websocket:websockets.server.WebSocketServerProtocol, path):
             await websocket.send(response(status=True, imgs=msg, fromcache=fromcache))
         else:                       # 分析失败
             if msg:                 # B站返回状态码
-                errmsg = '%s: %d' % (t('remote_is_return', locale), msg.status_code)
+                errmsg = '%s: %s' % (t('remote_is_return', locale), msg)
                 await websocket.send(response(status = False, errmsg = errmsg))
             else:                   # 其他错误
                 await websocket.send(response(status = False, errmsg = t('unknown_error', locale)))

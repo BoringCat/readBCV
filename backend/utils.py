@@ -297,13 +297,13 @@ class GetCVAsync():
                 self.filter_headers(reqheader)
                 self._log.debug('reqheader = %s' % str(reqheader))
                 res = self._session.get(url, headers = reqheader)
-                if res.status_code == 200:
+                if res.status_code == 200 and res.url == url:
                     isbv, cvid = getCVid(url)
                     imgs = self.readCV(url, res.text, isbv, reqheader, locale)
                     CacheDB.Cache(cvid, imgs)     # 写入缓存
                     asyncio.run_coroutine_threadsafe(callback(True, imgs),loop)
                 else:
-                    asyncio.run_coroutine_threadsafe(callback(False, res),loop)
+                    asyncio.run_coroutine_threadsafe(callback(False, res.status_code if res.url == url else t('page_not_found', locale) ),loop)
                 await asyncio.sleep(interval)
             except Empty:
                 pass
