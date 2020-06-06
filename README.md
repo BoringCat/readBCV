@@ -23,6 +23,7 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 ## 更新版本
 ### 2020/06/06
 - (Fix) 修复找不到专栏页面时无法返回错误信息的问题
+- (Add) 增加一个组合metafile文件的脚本
 
 <details>
  <summary>2020/05/31</summary>

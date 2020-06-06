@@ -23,6 +23,7 @@ The data for each article will keep a week
 ## Change logs
 ### 2020/06/06
 - (Fix) Now return human readable error message when page not found.
+- (Add) Add a python script to compose metafiles. (In Chinese)
 
 <details>
  <summary>2020/05/31</summary>
