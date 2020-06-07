@@ -1,13 +1,13 @@
-from utils import createLogger, GetCVAsync
+from utils import createLogger, GetCVAsync, GetHImgAsync
 from asyncio import Event as Lock, get_event_loop, sleep, get_event_loop
 import websockets
 from json import dumps, loads
 from config import envconfig
-from utils import getCVid
 from i18n import t
 
 fatherlog = createLogger('ReadBCV')
 getcv = GetCVAsync(fatherlog)
+gethimg = GetHImgAsync(fatherlog)
 
 def disconnect(msg):
     '''WebSocket格式化断开信息
@@ -71,16 +71,24 @@ async def readbcv(websocket:websockets.server.WebSocketServerProtocol, path):
         await websocket.send(disconnect(t('illegal_request', 'zh_CN')))
         await websocket.close(1001, "error")
         return
-    url = postdict.get('BURL', None)
+    bcurl = postdict.get('BURL', None)
+    hurl = postdict.get('HURL', None)
     locale = postdict.get('locale', 'zh_CN')
-    if not url:
+    if bool(bcurl) == bool(hurl):
         await websocket.send(disconnect(t('unknown_error', locale)))
         await websocket.close(1001, "error")
-    status, msg = getcv.Get(url, websocket.request_headers, locale, callback, get_event_loop()) # 提交任务到队列
-    logger.debug('Status: %s, msg: %s' % (status, msg))
-    if not status:                      # 提交失败（一般是被DOS或爬，导致队列已满）（或者代码出错:(）
-        await (websocket.close(1001, t('server_limit', locale)) if msg == 'Full' else websocket.close(1001, t('unknown_error', locale)))
-        return
+    if bcurl:
+        status, msg = getcv.Get(bcurl, websocket.request_headers, locale, callback, get_event_loop()) # 提交任务到队列
+        logger.getChild('bcurl').debug('Status: %s, msg: %s' % (status, msg))
+        if not status:                      # 提交失败（一般是被DOS或爬，导致队列已满）（或者代码出错:(）
+            await (websocket.close(1001, t('server_limit', locale)) if msg == 'Full' else websocket.close(1001, t('unknown_error', locale)))
+            return
+    elif hurl:
+        status, msg = gethimg.Get(hurl, websocket.request_headers, locale, callback, get_event_loop()) # 提交任务到队列
+        logger.getChild('hurl').debug('Status: %s, msg: %s' % (status, msg))
+        if not status:                      # 提交失败（一般是被DOS或爬，导致队列已满）（或者代码出错:(）
+            await (websocket.close(1001, t('server_limit', locale)) if msg == 'Full' else websocket.close(1001, t('unknown_error', locale)))
+            return
     logger.debug('WaitLock!')
     await lock.wait()                   # 阻塞，等待回调
     logger.debug('UnLock!')

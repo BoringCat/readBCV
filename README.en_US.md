@@ -19,11 +19,27 @@ Limited by Bilibili. Use **"Download selected links by ......"** is impossible
 ~~Or your downloader can create tasks without Referrer in headers~~  
 Avoid Bilibili return 421 when access too fast. Each access from server limit at 10 seconds  
 The data for each article will keep a week  
+[MetaFile Help](MetaFileHelp.en_US.md)
 
 ## Change logs
-### 2020/06/06
+### 2020/06/07
+- (Add) New feature: Get image list for Photo album @ bilibili  
+  - For users: You can just paste the url from `https://h.bilibili.com/`. Or input "h" + $ID
+  - For Database: It's id is "h" + $ID
+- (Motify) Change the way for connected database. Now each thread will get it's own link.  
+  - (Unknown) For SQLite memory database. Some time the backend will retuen "UnKnown Error" and terminal show error `no such table: cvcache`. It is caused by multiple threads. I can not reappear the problem.  
+    _(It maybe fine for other databases)__
+  **WARNING: For SQLite database. This change will cause large memory use. Because each Thread queue will get it own database**
+- (Motify) The "Download With MetaLink" button will be hide if there is only one image
+- (Motify) May add sort url support. ( Or may not :( )
+
+<details>
+ <summary>2020/06/06</summary>
+
 - (Fix) Now return human readable error message when page not found.
 - (Add) Add a python script to compose metafiles. (In Chinese)
+
+</details>
 
 <details>
  <summary>2020/05/31</summary>

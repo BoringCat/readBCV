@@ -9,6 +9,7 @@ from requests import session
 from i18n import t
 import re
 import json
+from db import CreateDB
 
 _isinit = False
 
@@ -82,7 +83,7 @@ class GetCVAsync():
       - fatherlog: logger对象
     
     funcs:
-      - Get(url, reqheader, callback, loop)
+      - Get(url, reqheader, locale, callback, loop)
     '''
     def __init__(self, fatherlog):
         self._log = fatherlog.getChild('GetCVAsync')
@@ -96,7 +97,7 @@ class GetCVAsync():
         )
         self._GoRUN = True
         self._getthread.start()
-        self._maxQueue = self._econf.get('maxQueue', 2048)
+        self._maxQueue = self._econf.get('maxQueue', 1024)
         self._getqueue = Queue(self._maxQueue)
         self._getcoro = asyncio.run_coroutine_threadsafe(
             self.GetQueue(self._econf.get('GetInterval', 10)),
@@ -286,7 +287,7 @@ class GetCVAsync():
         kwargs:
           - interval: 每次分析的间隔（单位：秒）（默认：10）
         '''
-        from db import CacheDB
+        CacheDB = CreateDB()
         while self._GoRUN:
             try:
                 (url, reqheader, locale, callback, loop) = self._getqueue.get()
@@ -314,6 +315,126 @@ class GetCVAsync():
 
     def Get(self, url, reqheader, locale, callback, loop):
         '''异步获取CV图片列表
+        kwargs:
+          - url: CV的URL
+          - reqheader: 用户的请求头
+          - callback: websocket的回调
+          - callback: 回调所在的asyncio loop
+        
+        return:
+          (status:bool, errmsg:str)
+        '''
+        try:
+            self._getqueue.put((url, reqheader, locale, callback, loop))
+        except Full:
+            return False, 'Full'
+        except:
+            return False, 'Unknown'
+        return True, 'Async'
+
+class GetHImgAsync():
+    '''异步获取相簿图片类
+    kwargs:
+      - fatherlog: logger对象
+    
+    funcs:
+      - Get(url, reqheader, locale, callback, loop)
+    '''
+    def __init__(self, fatherlog):
+        self._log = fatherlog.getChild('GetCVAsync')
+        self._econf = envconfig
+        self._getloop = asyncio.new_event_loop()
+        self._getthread = Thread(
+            target=start_loop,
+            args=(self._getloop,),
+            daemon=True,
+            name='GetCVAsync-GetThread'
+        )
+        self._GoRUN = True
+        self._getthread.start()
+        self._maxQueue = self._econf.get('maxQueue', 1024)
+        self._getqueue = Queue(self._maxQueue)
+        self._getcoro = asyncio.run_coroutine_threadsafe(
+            self.GetQueue(self._econf.get('GetInterval', 10)),
+            self._getloop
+        )
+        self._session = session()
+
+    def filter_headers(self, headers):
+        '''过滤无用头部避免出错
+
+        **你不应该在外部调用它！**  
+        
+        kwargs:
+          - headers: 头部dict
+        '''
+        headers.pop('Host', None)
+        headers.pop('Upgrade', None)
+        headers.pop('Connection', None)
+        headers.pop('Origin', None)
+        for k in list(headers.keys()):
+            if 'websocket' in k.lower():
+                headers.pop(k, None)
+
+    @staticmethod
+    def getHID(url):
+        id = url.split('/')[-1]
+        return id
+
+    def readHImg(self, webjson):
+        '''分析图片们
+
+        **你不应该在外部调用它！**
+
+        args:
+        - webjson: API返回的json
+        '''
+        
+        pictures = webjson.get('data',{}).get('item',{}).get('pictures', [])
+        if not pictures:
+            raise ValueError('Fail to get PictureList')
+
+        return {
+            'contents': list(map(lambda x:{ 'url': x }, filter(bool,map(lambda x:x.get('img_src',None), pictures))))
+        }
+
+    async def GetQueue(self, interval = 10):
+        '''获取相簿图片列表队列
+
+        **你不应该在外部调用它！**  
+        
+        kwargs:
+          - interval: 每次分析的间隔（单位：秒）（默认：10）
+        '''
+        CacheDB = CreateDB()
+        while self._GoRUN:
+            try:
+                (url, reqheader, locale, callback, loop) = self._getqueue.get()
+                hid = self.getHID(url)
+                apiurl = "https://api.vc.bilibili.com/link_draw/v1/doc/detail?doc_id=%s" % hid
+                cache = CacheDB.getCache('h%s' % hid)   # 读缓存，判断是否能从缓存返回
+                if cache:
+                    asyncio.run_coroutine_threadsafe(callback(True, cache, True),loop)
+                    continue
+                self.filter_headers(reqheader)
+                self._log.debug('reqheader = %s' % str(reqheader))
+                res = self._session.get(apiurl, headers = reqheader)
+                if res.status_code == 200 and res.url == apiurl:
+                    imgs = self.readHImg(res.json())
+                    CacheDB.Cache('h%s' % hid, imgs)     # 写入缓存
+                    asyncio.run_coroutine_threadsafe(callback(True, imgs),loop)
+                else:
+                    asyncio.run_coroutine_threadsafe(callback(False, res.status_code if res.url == url else t('page_not_found', locale) ),loop)
+                await asyncio.sleep(interval)
+            except Empty:
+                pass
+            except Exception as err:
+                self._log.getChild('GetQueue').error("Type: %s, msg: %s" % (type(err),str(err)))
+                asyncio.run_coroutine_threadsafe(callback(False, None, None),loop)
+                await asyncio.sleep(interval)
+
+    def Get(self, url, reqheader, locale, callback, loop):
+        '''异步获取相簿图片列表
         kwargs:
           - url: CV的URL
           - reqheader: 用户的请求头

@@ -63,7 +63,7 @@
           <div v-if="contents.length">
             <h3>
               {{ $t('message.linkList') }}
-              <a-button type="primary" class="metalink" @click="TryMeta">{{ $t('message.metalink_dl') }}</a-button>
+              <a-button v-if="contents.length > 1" type="primary" class="metalink" @click="TryMeta">{{ $t('message.metalink_dl') }}</a-button>
             </h3>
             <pre>{{ contents.map(e=>e.img).join('\n') }}</pre>
           </div>
@@ -91,7 +91,7 @@ export default {
       loading: false,
       loadimg: false,
       showall: false,
-      bid: '',
+      gid: '',
       contents: [],
       allkeys: [],
       lastwarn: {},
@@ -111,6 +111,10 @@ export default {
                     callback();
                   } else if (/^[bB][Vv]\w+$/.test(value)) {
                     callback();
+                  } else if (/^h\d+$/.test(value)) {
+                    callback();
+                  } else if (/^https?:\/\/h.bilibili.com\/\d+(\/)?$/.test(value)) {
+                    callback();
                   } else {
                     callback(this.$t('message.inputErrorMsg'));
                   }
@@ -124,10 +128,10 @@ export default {
   },
   methods: {
     TryMeta() {
-      let MetaFile = genMetalink(this.contents.map(e=>e.img),this.bid)
+      let MetaFile = genMetalink(this.contents.map(e=>e.img),this.gid)
       let blob = new Blob([MetaFile], {type: 'application/octet-stream'});
       let durl = URL.createObjectURL(blob)
-      this.downloadFile(durl, `${this.bid}.metalink`)
+      this.downloadFile(durl, `${this.gid}.metalink`)
       URL.revokeObjectURL(durl);
     },
     handleSubmit(e) {
@@ -135,10 +139,21 @@ export default {
       this.form.validateFields((err, values) => {
         if (!err) {
           let postval = {...values, locale: this.$i18n.locale}
-          this.bid = getName(values['BURL'])
+          this.gid = getName(values['BURL'])
           this.loading = true;
           if (/^cv\d+$/.test(values['BURL'])) postval['BURL'] = `https://www.bilibili.com/read/${values['BURL']}`
           else if (/^[bB][Vv]\w+$/.test(values['BURL'])) postval['BURL'] = `https://www.bilibili.com/video/cv${values['BURL']}`
+          else if (/^h\d+$/.test(values['BURL'])) {
+            console.log(values['BURL'], /^h\d+$/.compile(values['BURL']))
+            postval['HURL'] = `https://h.bilibili.com/${/^h(?<hid>\d+)$/.exec(values['BURL']).groups.hid}`
+            delete postval['BURL']
+            this.gid = `h${this.gid}`
+          }
+          else if (/^https?:\/\/h.bilibili.com\/\d+(\/)?$/.test(values['BURL'])) {
+            postval['HURL'] = values['BURL']
+            delete postval['BURL']
+            this.gid = `h${this.gid}`
+          }
           this.initWebSocket(postval);
         }
       });
@@ -199,11 +214,12 @@ export default {
         } else {
           imgurl = e
         }
-        let isheader = this.getName(imgurl) === this.getName(header)
+        let isheader = false
+        if (header) isheader = this.getName(imgurl) === this.getName(header)
         if (! have_header) if (isheader) have_header = true
         return {img: imgurl, isheader, figcaption, title}
       });
-      if (! have_header) this.contents.unshift({img: header, isheader: true})
+      if (! have_header && header) this.contents.unshift({img: header, isheader: true})
       if (fromcache) handleSuccess(
           this.$t('message.loadSuccess'),
           this.$t('message.loadFromCache'),
