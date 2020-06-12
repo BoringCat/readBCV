@@ -26,6 +26,13 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 - (Fix) 修复因Nginx默认配置更新导致无法启动的错误
 - (Add) 增加一个不带 nginx 的版本，需要手动挂载容器内的 /www/readbcv 到 web 服务器中  
   更多帮助 [Example of share volume](docs/ShareVolume.md)
+- (Add) 现在支持使用 Redis 数据库了
+  - 支持度： 正常无加密连接单节点，切换数据库(? 未验证)
+  - 存储的数据类型: String
+  - 键: $id
+- (Add) Sqlite 数据库现在支持使用文件（默认仍然是内存）
+  - 传递方法： 环境变量 DB_NAME  
+    **警告：必须设置DB_TYPE，否则任何 DB_ 开头的设置都不会生效**
 
 <details>
  <summary>2020/06/07</summary>

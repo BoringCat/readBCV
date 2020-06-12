@@ -26,6 +26,13 @@ The data for each article will keep a week
 - (Fix) Fix a problem which is cause by nginx.conf changed
 - (Add) New version: sharevolume. This version build without nginx but have static html files. You need to mount /www/readbcv in container into web server.  
   [Need more help?](docs/ShareVolume.en_US.md)
+- (Add) Now support Redis!
+  - Support signal point unencryption connect; select database(maybe)
+  - Used datatype: String
+  - Key: $id
+- (Add) Sqlite database now support use db file (By default still memory database)
+  - How to use: `env DB_NAME=/path/to/dbfile`  
+    **Warning: DB_TYPE MUST BE "sqlite" or none of environment value will be used**
 
 <details>
  <summary>2020/06/07</summary>
