@@ -19,10 +19,17 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 ~~你的下载器可以不带Referrer就当我没说~~  
 为防止B站返回421，后端处理速度限制为10秒/个  
 服务器缓存数据时间为7天  
-[MetaFile Help](MetaFileHelp.md)
+[MetaFile Help](docs/MetaFileHelp.md)
 
 ## 更新版本
-### 2020/06/07
+### 2020/06/12
+- (Fix) 修复因Nginx默认配置更新导致无法启动的错误
+- (Add) 增加一个不带 nginx 的版本，需要手动挂载容器内的 /www/readbcv 到 web 服务器中  
+  更多帮助 [Example of share volume](docs/ShareVolume.md)
+
+<details>
+ <summary>2020/06/07</summary>
+
 - (Add) 增加分析相簿图片的功能（最多也就9个，我怎么就怎么懒呢？）  
   - 对于用户：粘贴相簿的 URL 或 在ID前加h 即可进行分析
   - 对于数据库：继续使用源 cvcache 表，相簿前缀为h
@@ -32,6 +39,8 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
   **警告：对于SQLite内存数据库来说，这将增加大量的内存使用**
 - (Motify) 现在“使用MetaLink下载”按钮会在只有一张图片时隐藏
 - (Motify) 可能会加入短链接支持 （ 也可能不会 :( ）
+
+</details>
 
 <details>
  <summary>2020/06/06</summary>

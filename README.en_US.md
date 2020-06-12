@@ -19,10 +19,17 @@ Limited by Bilibili. Use **"Download selected links by ......"** is impossible
 ~~Or your downloader can create tasks without Referrer in headers~~  
 Avoid Bilibili return 421 when access too fast. Each access from server limit at 10 seconds  
 The data for each article will keep a week  
-[MetaFile Help](MetaFileHelp.en_US.md)
+[MetaFile Help](docs/MetaFileHelp.en_US.md)
 
 ## Change logs
-### 2020/06/07
+### 2020/06/12
+- (Fix) Fix a problem which is cause by nginx.conf changed
+- (Add) New version: sharevolume. This version build without nginx but have static html files. You need to mount /www/readbcv in container into web server.  
+  [Need more help?](docs/ShareVolume.en_US.md)
+
+<details>
+ <summary>2020/06/07</summary>
+
 - (Add) New feature: Get image list for Photo album @ bilibili  
   - For users: You can just paste the url from `https://h.bilibili.com/`. Or input "h" + $ID
   - For Database: It's id is "h" + $ID
@@ -32,6 +39,8 @@ The data for each article will keep a week
   **WARNING: For SQLite database. This change will cause large memory use. Because each Thread queue will get it own database**
 - (Motify) The "Download With MetaLink" button will be hide if there is only one image
 - (Motify) May add sort url support. ( Or may not :( )
+
+</details>
 
 <details>
  <summary>2020/06/06</summary>
