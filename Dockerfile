@@ -22,8 +22,9 @@ RUN set -xe\
  && source /envsetting.sh\
  && pip install --no-cache-dir -U supervisor $BACKEND $API $LIBS\
  && apk del gcc musl-dev\
- && mkdir -p /var/log /run/nginx\
- && rm /etc/nginx/conf.d/default.conf
+ && mkdir -p /var/log/nginx /run/nginx\
+ && rm /etc/nginx/conf.d/default.conf\
+ && sed -i '/error_log/s!/.*log!/dev/stderr!g;/access_log/s!/.*log!/dev/stdout!g' /etc/nginx/nginx.conf
 
 # Build the frontend
 FROM node:lts-alpine as WebBuilder
