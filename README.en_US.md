@@ -22,6 +22,9 @@ The data for each article will keep a week
 [MetaFile Help](docs/MetaFileHelp.en_US.md)
 
 ## Change logs
+### 2020/11/11
+- (Add) Add custom TTL for cache. default is 7 days.
+
 ### 2020/06/12
 - (Fix) Fix a problem which is cause by nginx.conf changed
 - (Add) New version: sharevolume. This version build without nginx but have static html files. You need to mount /www/readbcv in container into web server.  
@@ -174,6 +177,7 @@ Run `fontend/gen_i18njs.sh <localeName>`. Then motify `fontend/src/i18n/<locateN
 |DB_PASSWD|Password of database| - |
 |DB_NAME|Database name to use| - |
 |DB_AUTHDB|Auth database for MongoDB|Same as DB_NAME|
+|KEY_TTL|TTL for cache| 7(days) |
 
 ### Use docker-compose (recommend)
 ``` yaml
@@ -183,25 +187,18 @@ services:
     image: boringcat/readbcv:latest
     restart: on-failure
     links:
-      - readbcv_db:db
+      - readbcv_redis:rds
     environment:
-      DB_TYPE: Mongo
-      DB_HOST: db
-      DB_PORT: 27017
-      DB_USER: readbcv
-      DB_PASSWD: readbcv
-      DB_NAME: readbcv
-      DB_AUTHDB: readbcv
+      DB_TYPE: redis
+      DB_HOST: rds
+      KEY_TTL: 7
 
-  readbcv_db:               # MongoDB，For specific settings, please refer to https://hub.docker.com/_/mongo
-    image: mongo:4
+  readbcv_redis:               # Redis，For specific settings, please refer to https://hub.docker.com/_/redis
+    image: redis:alpine        # Recommend alpine 
     restart: on-failure
-    volumes: 
-      - /srv/datas/mongo:/data/db
+    volumes:
       - /etc/localtime:/etc/localtime:ro
     environment: 
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
       TZ: Asia/Shanghai     # Your area
 
 ```
@@ -215,27 +212,18 @@ $ docker build -t <Repository>:<Tag> .
 ```
 #### 1. Create database container (Ignore if you already have database)
 ```sh
-docker run --name readbcv_db --restart on-failure \
-    -v /srv/datas/mongo:/data/db \
+docker run --name readbcv_redis --restart on-failure \
     -v /etc/localtime:/etc/localtime:ro \
-    -e MONGO_INITDB_ROOT_USERNAME=root \
-    -e MONGO_INITDB_ROOT_PASSWORD=root \
     -e TZ=Asia/Shanghai \
-    -d mongo:4
+    -d redis:alpine
 ```
-#### 2. Config database's account, privileges
-Custom step......
-#### 3. Create App container
+#### 2. Create App container
 ```sh
 docker run --name readbcv --restart on-failure \
-    --link readbcv_db:db \
-    -e DB_TYPE=Mongo \
-    -e DB_HOST=db \
-    -e DB_PORT=27017 \
-    -e DB_USER=readbcv \
-    -e DB_PASSWD=readbcv \
-    -e DB_NAME=readbcv \
-    -e DB_AUTHDB=readbcv \
+    --link readbcv_redis:rds \
+    -e DB_TYPE=redis \
+    -e DB_HOST=rds \
+    -e KEY_TTL=7 \
     -p 8080:80 \
     -d boringcat/readbcv:latest
 ```

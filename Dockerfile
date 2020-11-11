@@ -1,7 +1,8 @@
 # Create base image first. Beacuse frontend change more frequently then backend
 FROM python:3.7-alpine as python_nginx_base
 ARG apkmirror=mirrors.sjtug.sjtu.edu.cn
-ARG pipmirror=https://pypi.tuna.tsinghua.edu.cn/simple
+ARG apkhttps=1
+ARG pipmirror=https://mirrors.aliyun.com/pypi/simple
 
 # Setup base config
 WORKDIR /app
@@ -16,8 +17,9 @@ ENTRYPOINT [ "/docker-entrypoint.sh" ]
 # Copy python depend config and install then
 COPY backend/envsetting.sh /
 RUN set -xe\
- && sed -i "s/dl-cdn.alpinelinux.org/${apkmirror}/g" /etc/apk/repositories\
- && apk add --update --no-cache gcc musl-dev nginx\
+ ;  sed -i "s/dl-cdn.alpinelinux.org/${apkmirror}/g" /etc/apk/repositories\
+ ;  [ ${apkhttps} -eq 1 ] && sed -i "s!http://!https://!g" /etc/apk/repositories\
+ ;  apk add --update --no-cache gcc musl-dev nginx\
  && pip config set global.index-url ${pipmirror}\
  && source /envsetting.sh\
  && pip install --no-cache-dir -U supervisor $BACKEND $API $LIBS\
@@ -29,13 +31,15 @@ RUN set -xe\
 # Build the frontend
 FROM node:lts-alpine as WebBuilder
 ARG apkmirror=mirrors.sjtug.sjtu.edu.cn
+ARG apkhttps=1
 ARG npmmirror=https://registry.npm.taobao.org
 # Install git for `yarn install`
 RUN set -xe\
  && mkdir /app\
  && cd /app\
- && sed -i "s/dl-cdn.alpinelinux.org/${apkmirror}/g" /etc/apk/repositories\
- && apk add --no-cache git\
+ ;  sed -i "s/dl-cdn.alpinelinux.org/${apkmirror}/g" /etc/apk/repositories\
+ ;  [ ${apkhttps} -eq 1 ] && sed -i "s!http://!https://!g" /etc/apk/repositories\
+ ;  apk add --no-cache git\
  && yarn config set registry "${npmmirror}"
 COPY fontend /app
 RUN set -xe\

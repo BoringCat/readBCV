@@ -14,9 +14,9 @@ class tempdb():
 
         cvid = Column(String(50), primary_key = True, autoincrement = False, nullable = False)
         imglist = Column(JSON(), nullable = False)
-        cachetime = Column(DateTime(), nullable = False)
+        expiretime = Column(DateTime(), nullable = False)
 
-        def todict(self, args = ['cvid', 'imglist', 'cachetime']):
+        def todict(self, args = ['cvid', 'imglist', 'expiretime']):
             d = {}
             for key in args:
                 d[key] = loads(getattr(self,key,'[]')) if key == 'imglist' else getattr(self,key,None)
@@ -24,7 +24,7 @@ class tempdb():
 
         def toJson(self):
             d=self.todict()
-            d['cachetime'] = d['cachetime'].strftime('%Y-%m-%d %H:%M:%S')
+            d['expiretime'] = d['expiretime'].strftime('%Y-%m-%d %H:%M:%S')
 
     def _check_Tables(self, *tables):
         existTables = self._engine.table_names()
@@ -68,23 +68,23 @@ class tempdb():
         session.close()
         return qd
 
-    def getCache(self, cvid, TTL = timedelta(days=7)):
+    def getCache(self, cvid):
         cache = self._getCache(cvid)
         if cache:
             now = datetime.now()
-            return cache['imglist'] if (now - cache['cachetime']) < TTL else None
+            return cache['imglist'] if now <= cache['expiretime'] else None
         return None
 
     def Cache(self, cvid, imglist):
         session = self.rawsession()
         cache = self._getCache(cvid, session)
         if cache:
-            cache.update({'imglist': dumps(imglist), 'cachetime': datetime.now()})
+            cache.update({'imglist': dumps(imglist), 'expiretime': datetime.now() + self._TTL})
         else:
             session.add(self.cvcache(
                 cvid = cvid,
                 imglist = dumps(imglist),
-                cachetime = datetime.now()
+                expiretime = datetime.now() + self._TTL
             ))
         
         return self._sessioncommit(session)

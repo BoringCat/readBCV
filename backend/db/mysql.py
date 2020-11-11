@@ -3,7 +3,7 @@ import logging
 
 class tempdb(_Base):
     def __init__(self, host = "localhost", port = 3306, user = "readbcv", password = "readbcv", 
-                 database = "readbcv", fatherlog = None, pool_size = 10):
+                 database = "readbcv", fatherlog = None, pool_size = 10, KeyTTL = timedelta(days=7)):
         self._log = fatherlog.getChild('TempDB') if fatherlog else logging.getLogger('TempDB')
         self._host = host
         self._port = port
@@ -11,6 +11,7 @@ class tempdb(_Base):
         self._password = password
         self._database = database
         self._pool_size = pool_size
+        self._TTL = KeyTTL
         self._Session = self._connect_db()
         self._create_DB()
         

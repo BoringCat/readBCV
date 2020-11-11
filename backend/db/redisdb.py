@@ -1,11 +1,12 @@
 import redis
 from datetime import timedelta, datetime
 from base64 import b64encode, b64decode
+from traceback import format_exc
 import logging
 import json
 
 class tempdb():
-    def __init__(self, host = 'localhost', port = 6379, password = None,
+    def __init__(self, host = 'localhost', port = 6379, password = None, KeyTTL = timedelta(days=7),
                  database = 0, encoding = "UTF-8", decode_responses = True, fatherlog = None):
         self._log = fatherlog.getChild('TempDB') if fatherlog else logging.getLogger('TempDB')
         self._host = host
@@ -14,6 +15,7 @@ class tempdb():
         self._db = database
         self._encoding = encoding
         self._decode_responses = decode_responses
+        self._TTL = KeyTTL
         self._connectDB()
 
     def _connectDB(self):
@@ -35,31 +37,22 @@ class tempdb():
         if not cachestr:
             return None
         try:
-            cjson = json.loads(cachestr)
-            return {
-                'cachetime': datetime.fromtimestamp(cjson['cachetime']),
-                'imglist': json.loads(b64decode(cjson['imglist'].encode('UTF-8')))
-            }
+            return json.loads(cachestr)
         except Exception as err:
-            self._log.getChild('_getCache').error(str(err))
+            self._log.getChild('_getCache').error(format_exc())
             return None
 
-    def getCache(self, cvid, TTL = timedelta(days=7)):
-        cache = self._getCache(cvid)
-        if cache:
-            now = datetime.now()
-            return cache['imglist'] if (now - cache['cachetime']) < TTL else None
-        return None
+    def getCache(self, cvid):
+        return self._getCache(cvid)
     
     def Cache(self, cvid, imglist):
-        datas = {
-            'imglist': b64encode(json.dumps(imglist, ensure_ascii=False).encode('UTF-8')).decode('UTF-8'),
-            'cachetime': datetime.now().timestamp()
-        }
+        cache = self._getCache(cvid)
         try:
-            status = self._db.set(cvid, json.dumps(datas, ensure_ascii=False))
+            if cache:
+                self._db.expire(cvid, int(self._TTL.total_seconds()))
+            status = self._db.set(cvid, json.dumps(imglist), ex=int(self._TTL.total_seconds()))
             return status, None
         except Exception as err:
-            self._log.getChild('Cache').error(str(err))
+            self._log.getChild('_getCache').error(format_exc())
             return False, str(err)
         return True, None

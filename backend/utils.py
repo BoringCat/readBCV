@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import asyncio
 from threading import Thread
 from queue import Queue, Empty, Full
+from traceback import format_exc
 from config import envconfig
 from requests import session
 from i18n import t
@@ -287,7 +288,10 @@ class GetCVAsync():
         kwargs:
           - interval: 每次分析的间隔（单位：秒）（默认：10）
         '''
-        CacheDB = CreateDB()
+        try:
+            CacheDB = CreateDB()
+        except Exception:
+            self._log.getChild('GetQueue.CreateDB').error(format_exc())
         while self._GoRUN:
             try:
                 (url, reqheader, locale, callback, loop) = self._getqueue.get()

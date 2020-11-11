@@ -22,6 +22,9 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 [MetaFile Help](docs/MetaFileHelp.md)
 
 ## 更新版本
+### 2020/11/11
+- (Add) 增加自定义过期时间（天）
+
 ### 2020/06/12
 - (Fix) 修复因Nginx默认配置更新导致无法启动的错误
 - (Add) 增加一个不带 nginx 的版本，需要手动挂载容器内的 /www/readbcv 到 web 服务器中  
@@ -172,6 +175,7 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 |DB_PASSWD|连接数据库的密码| - |
 |DB_NAME|数据库的库名| - |
 |DB_AUTHDB|Mongo数据库的认证库名|与DB_NAME相同|
+|KEY_TTL|缓存过期时间（天）| 7 |
 
 ### docker-compose（推荐）
 ``` yaml
@@ -183,25 +187,18 @@ services:
     ports:
       - 8080:80
     links:
-      - readbcv_db:db
+      - readbcv_redis:rds
     environment:
-      DB_TYPE: Mongo
-      DB_HOST: db
-      DB_PORT: 27017
-      DB_USER: readbcv
-      DB_PASSWD: readbcv
-      DB_NAME: readbcv
-      DB_AUTHDB: readbcv
+      DB_TYPE: redis
+      DB_HOST: rds
+      KEY_TTL: 7
 
-  readbcv_db:               # Mongo数据库，具体设置参考 https://hub.docker.com/_/mongo
-    image: mongo:4
+  readbcv_redis:               # Mongo数据库，具体设置参考 https://hub.docker.com/_/mongo
+    image: redis:alpine        # 推荐alpine
     restart: on-failure
     volumes: 
-      - /srv/datas/mongo:/data/db
       - /etc/localtime:/etc/localtime:ro
     environment: 
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: root
       TZ: Asia/Shanghai
 
 ```
@@ -215,27 +212,18 @@ $ docker build -t <Repository>:<Tag> .
 ```
 #### 1. 创建数据库容器（已有数据库可忽略）
 ```sh
-docker run --name readbcv_db --restart on-failure \
-    -v /srv/datas/mongo:/data/db \
+docker run --name readbcv_redis --restart on-failure \
     -v /etc/localtime:/etc/localtime:ro \
-    -e MONGO_INITDB_ROOT_USERNAME=root \
-    -e MONGO_INITDB_ROOT_PASSWORD=root \
     -e TZ=Asia/Shanghai \
-    -d mongo:4
+    -d redis:alpine
 ```
-#### 2. 配置数据库权限，新建数据库
-略
-#### 3. 创建容器
+#### 2. 创建容器
 ```sh
 docker run --name readbcv --restart on-failure \
-    --link readbcv_db:db \
-    -e DB_TYPE=Mongo \
-    -e DB_HOST=db \
-    -e DB_PORT=27017 \
-    -e DB_USER=readbcv \
-    -e DB_PASSWD=readbcv \
-    -e DB_NAME=readbcv \
-    -e DB_AUTHDB=readbcv \
+    --link readbcv_redis:rds \
+    -e DB_TYPE=redis \
+    -e DB_HOST=rds \
+    -e KEY_TTL=7 \
     -p 8080:80 \
     -d boringcat/readbcv:latest
 ```

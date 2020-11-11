@@ -1,3 +1,4 @@
+from datetime import timedelta
 from config import envconfig
 import logging
 
@@ -5,9 +6,10 @@ _dblog = logging.getLogger('db.__init__')
 __all__ = ['CreateDB']
 _dbType = str(envconfig.get('DB_TYPE')).lower()
 _dbconfs = dict(zip(
-    ['host', 'port', 'user', 'password', 'database', 'authdb'],
-    list(envconfig.gets('DB_HOST','DB_PORT','DB_USER','DB_PASSWD','DB_NAME','DB_AUTHDB'))
+    ['host', 'port', 'user', 'password', 'database', 'authdb', 'KeyTTL'],
+    list(envconfig.gets('DB_HOST','DB_PORT','DB_USER','DB_PASSWD','DB_NAME','DB_AUTHDB', 'KEY_TTL'))
 ))
+_dbconfs['KeyTTL'] = timedelta(days=_dbconfs['KeyTTL']) if _dbconfs['KeyTTL'] else timedelta(days=7)
 _dblog.getChild('_dbType').debug(_dbType)
 _dblog.getChild('_dbconfs').debug(str(_dbconfs))
 

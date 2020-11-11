@@ -1,12 +1,14 @@
 from .sql_base import tempdb as _Base, create_engine, sessionmaker
+from datetime import timedelta
 import os
 import logging
 
 class tempdb(_Base):
-    def __init__(self, database = None, fatherlog = None, pool_size = 10):
+    def __init__(self, database = None, fatherlog = None, pool_size = 10, KeyTTL = timedelta(days=7)):
         self._log = fatherlog.getChild('TempDB') if fatherlog else logging.getLogger('TempDB')
         self._database = database
         self._pool_size = pool_size
+        self._TTL = KeyTTL
         self._Session = self._connect_db()
         self._create_DB()
         

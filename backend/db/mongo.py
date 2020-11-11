@@ -7,9 +7,9 @@ class tempdb():
     class cvcache(DynamicDocument):
         cvid = StringField()
         imglist = DictField()
-        cachetime = DateTimeField()
+        expiretime = DateTimeField()
 
-        def todict(self, args = ['cvid', 'imglist', 'cachetime']):
+        def todict(self, args = ['cvid', 'imglist', 'expiretime']):
             d = {}
             for key in args:
                 d[key] = getattr(self,key,None)
@@ -19,10 +19,10 @@ class tempdb():
             return dict(
                 cvid = self.cvid,
                 imglist = self.imglist,
-                cachetime = self.cachetime.strftime('%Y-%m-%d %H:%M:%S')
+                expiretime = self.expiretime.strftime('%Y-%m-%d %H:%M:%S')
             )
 
-    def __init__(self, host = "localhost", port = 27017, user = "readbcv",
+    def __init__(self, host = "localhost", port = 27017, user = "readbcv", KeyTTL = timedelta(days=7),
                  password = "readbcv", database = "readbcv", authdb = None, fatherlog = None):
         self._log = fatherlog.getChild('TempDB') if fatherlog else logging.getLogger('TempDB')
         self._host = host
@@ -31,6 +31,7 @@ class tempdb():
         self._password = password
         self._dbname = database
         self._authdb = authdb or database
+        self._TTL = KeyTTL
         self._connectDB()
 
     def _connectDB(self):
@@ -49,14 +50,14 @@ class tempdb():
         cache = self._getCache(cvid)
         if cache:
             now = datetime.now()
-            return cache.imglist if (now - cache.cachetime) < TTL else None
+            return cache.imglist if now <= cache.expiretime else None
         return None
 
     def Cache(self, cvid, imglist):
         cache = self._getCache(cvid)
         if cache:
             cache.imglist = imglist
-            cache.cachetime = datetime.now()
+            cache.expiretime = datetime.now() + self._TTL
             try:
                 cache.save()
             except Exception as err:
@@ -66,7 +67,7 @@ class tempdb():
             newCache = self.cvcache(
                 cvid = cvid,
                 imglist = imglist,
-                cachetime = datetime.now()
+                expiretime = datetime.now() + self._TTL
             )
             try:
                 newCache.save()
