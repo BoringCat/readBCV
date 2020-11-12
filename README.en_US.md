@@ -22,10 +22,21 @@ The data for each article will keep a week
 [MetaFile Help](docs/MetaFileHelp.en_US.md)
 
 ## Change logs
+### 2020/11/12
+- (Fix) Fix an url parsing problem for bv url
+- (Fix) Fix a problem cause mobile devices can not get any response
+  Notify: Limit by bilibili. You can not get cover on mobile devices
+- (Add) Now support url redirect.
+  Example: When you access cvXXXXXXXX on your phone. It will redirected to mobile/XXXXXXXX.
+  Now backend can fetch page correctly
+
 ### 2020/11/11
 - (Add) Add custom TTL for cache. default is 7 days.
+- (Motify) Use redis key expired instead (now - datetime)
 
-### 2020/06/12
+<details>
+ <summary>2020/06/12</summary>
+
 - (Fix) Fix a problem which is cause by nginx.conf changed
 - (Add) New version: sharevolume. This version build without nginx but have static html files. You need to mount /www/readbcv in container into web server.  
   [Need more help?](docs/ShareVolume.en_US.md)
@@ -36,6 +47,8 @@ The data for each article will keep a week
 - (Add) Sqlite database now support use db file (By default still memory database)
   - How to use: `env DB_NAME=/path/to/dbfile`  
     **Warning: DB_TYPE MUST BE "sqlite" or none of environment value will be used**
+
+</details>
 
 <details>
  <summary>2020/06/07</summary>

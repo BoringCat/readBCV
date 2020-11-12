@@ -134,6 +134,8 @@ class GetCVAsync():
         return:
         - url: 完整链接
         '''
+        if not url:
+            return None
         if not url.startswith('http'):
             if url.startswith('//'):
                 return 'https:' + url
@@ -201,10 +203,10 @@ class GetCVAsync():
                 ulist.append({'url': raw_src, 'figcaption': '\n'.join(map(lambda x:x.text, map(br2Newline, figcaptions)))})
             else:
                 ulist.append({'url': raw_src})
-        return {
-            'header': head_img,
-            'contents': ulist
-        }
+        resp = {'contents': ulist}
+        if head_img:
+            resp['header'] = head_img
+        return resp
 
     def _readBV(self, webtext, id = None, isav = False):
         '''分析视频封面和标题
@@ -288,11 +290,13 @@ class GetCVAsync():
         else:
             return None, None
 
-    def checkurl(self, url_src, url_dst):
+    def _checkurl(self, url_src, url_dst):
+        self._log.getChild('_checkurl').debug('url_src: %s' % url_src)
+        self._log.getChild('_checkurl').debug('url_dst: %s' % url_dst)
         return url_dst in [
-            url_dst,
-            url_dst.replace('/cv', '/mobile/'),
-            url_dst.replace('//www.','//m.')
+            url_src,
+            url_src.replace('/cv', '/mobile/'),
+            url_src.replace('//www.','//m.')
         ]
 
     async def GetQueue(self, interval = 10):
@@ -317,7 +321,7 @@ class GetCVAsync():
                 self.filter_headers(reqheader)
                 self._log.debug('reqheader = %s' % str(reqheader))
                 res = self._session.get(url, headers = reqheader)
-                if res.status_code == 200 and checkurl(res.url):
+                if res.status_code == 200 and self._checkurl(url, res.url):
                     isbv, cvid = getCVid(url)
                     imgs = self.readCV(url, res.text, isbv, reqheader, locale)
                     CacheDB.Cache(cvid, imgs)     # 写入缓存
@@ -327,8 +331,8 @@ class GetCVAsync():
                 await asyncio.sleep(interval)
             except Empty:
                 pass
-            except Exception as err:
-                self._log.getChild('GetQueue').error("Type: %s, msg: %s" % (type(err),str(err)))
+            except Exception:
+                self._log.getChild('GetQueue').error(format_exc())
                 asyncio.run_coroutine_threadsafe(callback(False, None, None),loop)
                 await asyncio.sleep(interval)
 

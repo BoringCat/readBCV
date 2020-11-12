@@ -77,6 +77,9 @@
 import { handleError, handleSuccess, handleWarning, closeOne, genMetalink, getName } from "@/utils";
 import { Row, Col } from "ant-design-vue";
 import { switchLocale } from '@/i18n';
+const cvexpr = /cv(?<cvid>\d+)$/,
+      mobileexpr = /\/mobile\/(?<cvid>\d+)$/,
+      bvexpr = /[bB][Vv](?<bvid>\w+)$/
 export default {
   components: {
     Row,
@@ -105,9 +108,13 @@ export default {
                 validator: (rule, value, callback) => {
                   if (/^https?:\/\/www.bilibili.com\/read\/cv\d+$/.test(value)) {
                     callback();
+                  } else if (/^https?:\/\/www.bilibili.com\/read\/mobile\/\d+$/.test(value)) {
+                    callback();
                   } else if (/^cv\d+$/.test(value)) {
                     callback();
                   } else if (/^https?:\/\/www.bilibili.com\/video\/[bB][Vv]\w+$/.test(value)) {
+                    callback();
+                  } else if (/^https?:\/\/m.bilibili.com\/video\/[bB][Vv]\w+$/.test(value)) {
                     callback();
                   } else if (/^[bB][Vv]\w+$/.test(value)) {
                     callback();
@@ -141,10 +148,18 @@ export default {
           let postval = {...values, locale: this.$i18n.locale}
           this.gid = getName(values['BURL'])
           this.loading = true;
-          if (/^cv\d+$/.test(values['BURL'])) postval['BURL'] = `https://www.bilibili.com/read/${values['BURL']}`
-          else if (/^[bB][Vv]\w+$/.test(values['BURL'])) postval['BURL'] = `https://www.bilibili.com/video/cv${values['BURL']}`
+          if (cvexpr.test(values['BURL'])){
+            let cvid = cvexpr.exec(values['BURL']).groups.cvid
+            postval['BURL'] = `https://www.bilibili.com/read/cv${cvid}`
+          } else if (mobileexpr.test(values['BURL'])) {
+            let cvid = mobileexpr.exec(values['BURL']).groups.cvid
+            postval['BURL'] = `https://www.bilibili.com/read/cv${cvid}`
+          }
+          else if (bvexpr.test(values['BURL'])){
+            let bvid = bvexpr.exec(values['BURL']).groups.bvid
+            postval['BURL'] = `https://www.bilibili.com/video/bv${bvid}`
+          }
           else if (/^h\d+$/.test(values['BURL'])) {
-            console.log(values['BURL'], /^h\d+$/.compile(values['BURL']))
             postval['HURL'] = `https://h.bilibili.com/${/^h(?<hid>\d+)$/.exec(values['BURL']).groups.hid}`
             delete postval['BURL']
             this.gid = `h${this.gid}`
@@ -215,11 +230,11 @@ export default {
           imgurl = e
         }
         let isheader = false
-        if (header) isheader = this.getName(imgurl) === this.getName(header)
+        if (Object.keys(header || {}).length > 0) isheader = this.getName(imgurl) === this.getName(header)
         if (! have_header) if (isheader) have_header = true
         return {img: imgurl, isheader, figcaption, title}
       });
-      if (! have_header && header) this.contents.unshift({img: header, isheader: true})
+      if (! have_header && Object.keys(header || {}) > 0) this.contents.unshift({img: header, isheader: true})
       if (fromcache) handleSuccess(
           this.$t('message.loadSuccess'),
           this.$t('message.loadFromCache'),

@@ -22,10 +22,20 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 [MetaFile Help](docs/MetaFileHelp.md)
 
 ## 更新版本
+### 2020/11/12
+- (Fix) 修复解析BV时URL错误的问题
+- (Fix) 修复手机端获取的问题
+  注意：手机端出于B站限制，无法获取到cv封面
+- (Add) 增加URL跳转支持
+  例：手机访问cvXXXXXXXX会自动跳转到mobile/XXXXXXXX。源逻辑判断为获取失败，现在能正常返回数据了
+
 ### 2020/11/11
 - (Add) 增加自定义过期时间（天）
+- (Motify) 修改Redis的使用方式
 
-### 2020/06/12
+<details>
+ <summary>2020/06/12</summary>
+
 - (Fix) 修复因Nginx默认配置更新导致无法启动的错误
 - (Add) 增加一个不带 nginx 的版本，需要手动挂载容器内的 /www/readbcv 到 web 服务器中  
   更多帮助 [Example of share volume](docs/ShareVolume.md)
@@ -36,6 +46,8 @@ readBCV(BCVReader) 是一个用于分析获取B站专栏图片的页面
 - (Add) Sqlite 数据库现在支持使用文件（默认仍然是内存）
   - 传递方法： 环境变量 DB_NAME  
     **警告：必须设置DB_TYPE，否则任何 DB_ 开头的设置都不会生效**
+
+</details>
 
 <details>
  <summary>2020/06/07</summary>
