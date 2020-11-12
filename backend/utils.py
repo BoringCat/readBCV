@@ -143,6 +143,14 @@ class GetCVAsync():
                 return baseurl + url
         return ('https:%s' % url[5:]) if url[:5] == 'http:' else url
 
+    def _filter_cards(self, img):
+        cstr = '\n'.join(img.attrs.get('class',[]))
+        if 'cut-off' in cstr:
+            return False
+        if 'article-card' in cstr:
+            return False
+        return True
+
     def readCV(self, baseurl, webtext, isBV = False, userAgents = None, locale = 'zh_CN'):
         '''分析图片们
 
@@ -160,7 +168,7 @@ class GetCVAsync():
         haveHead = bs.find('meta', {'data-hid': "og:image"})    # 获取封面
         head_img = self._url_filter(baseurl, haveHead.attrs.get('content')) if haveHead else None
         imgs = list(filter(                                     # 过滤分割图片（`cut-off-\d+`）
-            lambda x:'cut-off' not in ('\n'.join(x.attrs.get('class',[]))),
+            self._filter_cards,
             bs.find('div','article-holder').find_all('img')
         ))
         ulist = []
@@ -280,6 +288,13 @@ class GetCVAsync():
         else:
             return None, None
 
+    def checkurl(self, url_src, url_dst):
+        return url_dst in [
+            url_dst,
+            url_dst.replace('/cv', '/mobile/'),
+            url_dst.replace('//www.','//m.')
+        ]
+
     async def GetQueue(self, interval = 10):
         '''获取CV图片列表队列
 
@@ -302,7 +317,7 @@ class GetCVAsync():
                 self.filter_headers(reqheader)
                 self._log.debug('reqheader = %s' % str(reqheader))
                 res = self._session.get(url, headers = reqheader)
-                if res.status_code == 200 and res.url == url:
+                if res.status_code == 200 and checkurl(res.url):
                     isbv, cvid = getCVid(url)
                     imgs = self.readCV(url, res.text, isbv, reqheader, locale)
                     CacheDB.Cache(cvid, imgs)     # 写入缓存
