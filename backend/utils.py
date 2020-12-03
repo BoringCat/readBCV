@@ -244,7 +244,7 @@ class GetCVAsync():
         '''
         scriptlist = list(filter(lambda x: aid in (x.string or ''), bs.find_all('script') ))
         for script in scriptlist:
-            trysearch = re.search(r'__INITIAL_STATE__[ ]?=[ ]?(?P<j>[\S \n]+)}[ ]*;', script.string)
+            trysearch = re.search(r'__INITIAL_STATE__[ ]?=[ ]?(?P<j>.*)}[ ]*;', script.string)
             if trysearch:
                 jsonstr = trysearch.groupdict()['j'] + '}'
                 j = json.loads(jsonstr)
